@@ -4,37 +4,60 @@
 #include "stdint.h"
 #include "ch32v003fun.h"
 
+// PWM Frequency (Hz)
+#define TRACK_PWM_FREQ 100000
+// Track PWM maximum power [0, 1]
+#define TRACK_PWM_POWER_PCT 82
+// Guard PWM duty cycle percent [0, 100]
+#define GUARD_PWM_POWER_PCT 60
+
+// PWM Prescale
 #define PRESCALE_DIV1 0
 
-volatile uint8_t phase_idx = 0;
+// PWM period, in system clock ticks. See ATRLR period
+#define PWM_PERIOD (FUNCONF_SYSTEM_CORE_CLOCK / (TRACK_PWM_FREQ * (PRESCALE_DIV1+1)) )
+// Maximum duty cycle in Sine wave
+#define MAX_DUTY (TRACK_PWM_POWER_PCT * PWM_PERIOD / 100)
+// Guard rail duty cycle
+#define GUARD_DUTY (GUARD_PWM_POWER_PCT * PWM_PERIOD / 100)
 
-const int8_t lut[256] = {
-   0,   3,   6,   9,  12,  16,  19,  22,  25,  28,
-  31,  34,  37,  40,  43,  46,  49,  51,  54,  57,
-  60,  63,  65,  68,  71,  73,  76,  78,  81,  83,
-  85,  88,  90,  92,  94,  96,  98, 100, 102, 104,
- 106, 107, 109, 111, 112, 113, 115, 116, 117, 118,
- 120, 121, 122, 122, 123, 124, 125, 125, 126, 126,
- 126, 127, 127, 127, 127, 127, 127, 127, 126, 126,
- 126, 125, 125, 124, 123, 122, 122, 121, 120, 118,
- 117, 116, 115, 113, 112, 111, 109, 107, 106, 104,
- 102, 100,  98,  96,  94,  92,  90,  88,  85,  83,
-  81,  78,  76,  73,  71,  68,  65,  63,  60,  57,
-  54,  51,  49,  46,  43,  40,  37,  34,  31,  28,
-  25,  22,  19,  16,  12,   9,   6,   3,   0,  -3,
-  -6,  -9, -12, -16, -19, -22, -25, -28, -31, -34,
- -37, -40, -43, -46, -49, -51, -54, -57, -60, -63,
- -65, -68, -71, -73, -76, -78, -81, -83, -85, -88,
- -90, -92, -94, -96, -98,-100,-102,-104,-106,-107,
--109,-111,-112,-113,-115,-116,-117,-118,-120,-121,
--122,-122,-123,-124,-125,-125,-126,-126,-126,-127,
--127,-127,-127,-127,-127,-127,-126,-126,-126,-125,
--125,-124,-123,-122,-122,-121,-120,-118,-117,-116,
--115,-113,-112,-111,-109,-107,-106,-104,-102,-100,
- -98, -96, -94, -92, -90, -88, -85, -83, -81, -78,
- -76, -73, -71, -68, -65, -63, -60, -57, -54, -51,
- -49, -46, -43, -40, -37, -34, -31, -28, -25, -22,
- -19, -16, -12,  -9,  -6,  -3 };
+
+// Global state of track 
+typedef struct {
+    uint8_t phase_idx;
+    bool enabled;
+} track_state_t;
+
+typedef enum {
+    PHASE_A,
+    PHASE_B
+} phase_num_t;
+
+// Quarter sine wave, scaled to max pwm duty
+const int16_t lut[64] = {
+    0.0000000000*MAX_DUTY, 0.0245412285*MAX_DUTY, 0.0490676743*MAX_DUTY,
+    0.0735645636*MAX_DUTY, 0.0980171403*MAX_DUTY, 0.1224106752*MAX_DUTY,
+    0.1467304745*MAX_DUTY, 0.1709618888*MAX_DUTY, 0.1950903220*MAX_DUTY,
+    0.2191012402*MAX_DUTY, 0.2429801799*MAX_DUTY, 0.2667127575*MAX_DUTY,
+    0.2902846773*MAX_DUTY, 0.3136817404*MAX_DUTY, 0.3368898534*MAX_DUTY,
+    0.3598950365*MAX_DUTY, 0.3826834324*MAX_DUTY, 0.4052413140*MAX_DUTY,
+    0.4275550934*MAX_DUTY, 0.4496113297*MAX_DUTY, 0.4713967368*MAX_DUTY,
+    0.4928981922*MAX_DUTY, 0.5141027442*MAX_DUTY, 0.5349976199*MAX_DUTY,
+    0.5555702330*MAX_DUTY, 0.5758081914*MAX_DUTY, 0.5956993045*MAX_DUTY,
+    0.6152315906*MAX_DUTY, 0.6343932842*MAX_DUTY, 0.6531728430*MAX_DUTY,
+    0.6715589548*MAX_DUTY, 0.6895405447*MAX_DUTY, 0.7071067812*MAX_DUTY,
+    0.7242470830*MAX_DUTY, 0.7409511254*MAX_DUTY, 0.7572088465*MAX_DUTY,
+    0.7730104534*MAX_DUTY, 0.7883464276*MAX_DUTY, 0.8032075315*MAX_DUTY,
+    0.8175848132*MAX_DUTY, 0.8314696123*MAX_DUTY, 0.8448535652*MAX_DUTY,
+    0.8577286100*MAX_DUTY, 0.8700869911*MAX_DUTY, 0.8819212643*MAX_DUTY,
+    0.8932243012*MAX_DUTY, 0.9039892931*MAX_DUTY, 0.9142097557*MAX_DUTY,
+    0.9238795325*MAX_DUTY, 0.9329927988*MAX_DUTY, 0.9415440652*MAX_DUTY,
+    0.9495281806*MAX_DUTY, 0.9569403357*MAX_DUTY, 0.9637760658*MAX_DUTY,
+    0.9700312532*MAX_DUTY, 0.9757021300*MAX_DUTY, 0.9807852804*MAX_DUTY,
+    0.9852776424*MAX_DUTY, 0.9891765100*MAX_DUTY, 0.9924795346*MAX_DUTY,
+    0.9951847267*MAX_DUTY, 0.9972904567*MAX_DUTY, 0.9987954562*MAX_DUTY,
+    (0.9996988187*MAX_DUTY)
+};
 
 const int8_t lut2[32] = {
    0,  25,  49,  71,  90, 106, 117, 125, 127, 125,
@@ -62,8 +85,7 @@ void PhasePWM_initTim1(void)
 
     // Set frequency ATRLR = clock/(freq*(PRESCALE_DIV+1))
     // 48 MHz clock, 20 kHz PWM, PRESCALE_DIV = 0;
-    TIM1->ATRLR = 2400;
-    //TIM2->CH1CVR = 1200;
+    TIM1->ATRLR = (PWM_PERIOD);
     
     // Output, positive polarity
     TIM1->CCER |= TIM_CC1E | TIM_CC1P;
@@ -88,8 +110,35 @@ void PhasePWM_initTim1(void)
 	TIM1->BDTR |= TIM_MOE;
 
 	// Enable TIM1
-	TIM1->CTLR1 |= TIM_CEN;
+    TIM1->CTLR1 |= TIM_CEN;
 }
+
+void PhasePWM_initTim2(void) 
+{
+    RCC->APB1PCENR |= RCC_APB1Periph_TIM2;
+
+    // Reset TIM2 to init all regs
+    RCC->APB1PRSTR |= RCC_APB1Periph_TIM2;
+    RCC->APB1PRSTR &= ~RCC_APB1Periph_TIM2;
+
+    TIM2->PSC = PRESCALE_DIV1;
+    TIM2->ATRLR = PWM_PERIOD;
+    TIM2->CH2CVR = 0;
+
+    // PWM Mode 2
+    TIM2->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1 | TIM_OC2M_0;
+
+    // Enable Channel outputs
+    TIM2->CCER |= TIM_CC2E | TIM_CC2P;
+
+    // initialize counter
+    TIM2->SWEVGR |= TIM_UG;
+
+    // Enable TIM2
+    TIM2->CTLR1 |= TIM_CEN;
+}
+
+
 
 
 void PhasePWM_setDuty(uint8_t ch, uint16_t duty) 
@@ -114,17 +163,17 @@ void PhasePWM_setDuty(uint8_t ch, uint16_t duty)
 
 }
 
-void PhasePWM_setPhaseDuty(uint8_t phase_ch, int16_t duty) 
+void PhasePWM_setPhaseDuty(phase_num_t phase, int16_t duty) 
 {   
     if (duty >= 0)
     {
-        switch (phase_ch)
+        switch (phase)
         {
-        case 1:
+        case PHASE_A:
             PhasePWM_setDuty(1, (uint16_t) duty);
             PhasePWM_setDuty(3, 0);
             break;
-        case 2:
+        case PHASE_B:
             PhasePWM_setDuty(4, (uint16_t) duty);
             PhasePWM_setDuty(2, 0);
             break;
@@ -134,13 +183,13 @@ void PhasePWM_setPhaseDuty(uint8_t phase_ch, int16_t duty)
     }
     else  
     {
-        switch (phase_ch)
+        switch (phase)
         {
-        case 1:
+        case PHASE_A:
             PhasePWM_setDuty(3, (uint16_t) (-duty));
             PhasePWM_setDuty(1, 0);
             break;
-        case 2:
+        case PHASE_B:
             PhasePWM_setDuty(2, (uint16_t) (-duty));
             PhasePWM_setDuty(4, 0);
             break;
@@ -150,104 +199,72 @@ void PhasePWM_setPhaseDuty(uint8_t phase_ch, int16_t duty)
     }
 }
 
+// Returns value from Sine lookup table, i = [0,255] corresponds to one period.
+int16_t sine_lut(uint8_t i){
+    // Extract value from quarter wave LUT
 
-void PhasePWM_step(uint8_t power) 
+    if (i < 64) {
+        return lut[i];
+    } else if (i < 128){
+        return lut[127-i];
+    } else if (i < 192){
+        return -lut[i-128];
+    } else {
+        return -lut[255-i];
+    }
+
+}
+
+// ----------- User facing functions ---------------
+
+// Take steps in wave
+void track_step(track_state_t * track_state, uint8_t steps) 
 {   
-    // scale duty cycle [0,255] = [0, 2400]
-    int32_t max_duty = (uint32_t) (power*2400) >> 8;
-    
-    uint8_t phase_idx_shift = phase_idx + 64;
-
-    int32_t duty1 = (max_duty * lut[phase_idx]) >> 7;
-    int32_t duty2 = (max_duty * lut[phase_idx_shift]) >> 7;
-    
-    PhasePWM_setPhaseDuty(1, (int16_t) duty1);
-    PhasePWM_setPhaseDuty(2, (int16_t) duty2);
-
     // overflow ok
-    phase_idx++;
+    track_state->phase_idx += steps;
+
+    uint8_t phase_idx = track_state->phase_idx;  
+
+    int16_t duty1 = sine_lut(phase_idx);
+    int16_t duty2 = sine_lut(phase_idx + 64);
+    
+    PhasePWM_setPhaseDuty(PHASE_A, duty1);
+    PhasePWM_setPhaseDuty(PHASE_B, duty2);
     
 }
 
-void PhasePWM_step2(uint8_t power)
-{
-        // scale duty cycle [0,255] = [0, 2400]
-    int32_t max_duty = (uint32_t) (power*2400) >> 8;
+void track_init(track_state_t * state){
+    PhasePWM_initTim1();
+    PhasePWM_initTim2();    
     
-    uint8_t phase_idx_shift = (phase_idx + 8)%32;
+    state->phase_idx = 0;
+    state->enabled = false;
 
-    int32_t duty1 = (max_duty * lut2[phase_idx]) >> 7;
-    int32_t duty2 = (max_duty * lut2[phase_idx_shift]) >> 7;
-    
-    PhasePWM_setPhaseDuty(1, (int16_t) duty1);
-    PhasePWM_setPhaseDuty(2, (int16_t) duty2);
-
-    // wrap at idx 32
-    phase_idx++;
-    phase_idx = phase_idx % 32;
-}
-
-void PhasePWM_step3(uint8_t power)
-{
-        // scale duty cycle [0,255] = [0, 2400]
-    int32_t max_duty = (uint32_t) (power*2400) >> 8;
-    
-    uint8_t phase_idx_shift = (phase_idx + 4)%16;
-
-    int32_t duty1 = (max_duty * lut3[phase_idx]) >> 7;
-    int32_t duty2 = (max_duty * lut3[phase_idx_shift]) >> 7;
-    
-    PhasePWM_setPhaseDuty(1, (int16_t) duty1);
-    PhasePWM_setPhaseDuty(2, (int16_t) duty2);
-
-    // wrap at idx 16
-    phase_idx++;
-    phase_idx = phase_idx % 16;
 }
 
 
-void PhasePWM_disableTim1(void) 
-{
-    TIM1->CH1CVR = 0;
-    TIM1->CH2CVR = 0;
-    TIM1->CH3CVR = 0;
-    TIM1->CH4CVR = 0;
+void track_enable(track_state_t * state){
+    // Set PWMs
+    PhasePWM_setPhaseDuty(PHASE_A, state->phase_idx);
+    PhasePWM_setPhaseDuty(PHASE_B, state->phase_idx + 64);
 
-    TIM1->CTLR1 &= ~TIM_CEN;   
+    // Guard duty
+    TIM2->CH2CVR = (GUARD_DUTY);
+
+    // Enable timer counters
+    //TIM1->CTLR1 |= TIM_CEN;
+    //TIM2->CTLR2 |= TIM_CEN;
 }
 
-void PhasePWM_enableTim1(void) 
-{
-    TIM1->CTLR1 |= TIM_CEN;
-}
+void track_disable(track_state_t * state){
+    // Set duty to zero
+    PhasePWM_setPhaseDuty(PHASE_A, 0);
+    PhasePWM_setPhaseDuty(PHASE_B, 0);
 
-void PhasePWM_initTim2(void) 
-{
-    RCC->APB1PCENR |= RCC_APB1Periph_TIM2;
-
-    // Reset TIM2 to init all regs
-    RCC->APB1PRSTR |= RCC_APB1Periph_TIM2;
-    RCC->APB1PRSTR &= ~RCC_APB1Periph_TIM2;
-
-    // Prescale Div 0 and 1600 period = 30 kHz PWM
-    TIM2->PSC = PRESCALE_DIV1;
-    TIM2->ATRLR = 2400;
+    // Guard duty
     TIM2->CH2CVR = 0;
 
-    // PWM Mode 2
-    TIM2->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1 | TIM_OC2M_0;
-
-    // Enable Channel outputs
-    TIM2->CCER |= TIM_CC2E | TIM_CC2P;
-
-    // initialize counter
-    TIM2->SWEVGR |= TIM_UG;
-
-    // Enable TIM2
-    TIM2->CTLR1 |= TIM_CEN;
-}
-
-void PhasePWM_setGuardDuty(uint16_t duty)  
-{
-    TIM2->CH2CVR = duty;
+    // Disable timer counters
+    //TIM1->CTLR1 &= ~TIM_CEN;
+    //TIM2->CTLR1 &= ~TIM_CEN;
 }

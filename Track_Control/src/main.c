@@ -10,16 +10,15 @@
 #include "buttons.h"
 #include "PhasePWM.h"
 
-#define tim2_map 0b01
-#define tim1_map 0b11
-
-#define SYSTICK_INT_HZ 40000
+#define SYSTICK_INT_HZ 5000
 
 uint8_t yellow [3] = {0x08, 0x08, 0x00};
 uint8_t black [3] = {0x00, 0x00, 0x00};
 
 int touch_vals [3] = {0};
 int touch_pins [3] = {0, 1, 2};
+
+track_state_t track_state;
 
 volatile struct {
 	uint8_t guard_pwm;
@@ -64,35 +63,30 @@ int main()
 
 	// D3 T2CH2 PWM G2
   GPIOD->CFGLR &= ~(0xf<<(4*3));
-  GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP)<<(4*3);
+  GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*3);
 
 	// // Alternate Function Reset 
 	// RCC->APB2PCENR |= RCC_APB2Periph_AFIO;
 
-	//t2pwm_init();
-	
 	//Activate clock for Alternate Pin function
 	RCC->APB2PCENR |= RCC_AFIOEN;
 
 	// // Set pin mapping for tim2
-	AFIO->PCFR1 |= ((tim2_map & 0b11) << 8); 
+	AFIO->PCFR1 |= ((0b00) << 8); 
 
 	// Set pin mapping for tim1
-	AFIO->PCFR1 |= ((tim1_map & 0b11) << 6);
+	AFIO->PCFR1 |= ((0b11) << 6);
 
 	// Init phase PWM timer
-	PhasePWM_initTim1();
+	track_init(&track_state);
 
 	// Init button gpios and NVIC
 	buttons_init();
 
-	// Init buzzer timer
-	//t2pwm_init();
-	//change_song(0);
 
 	ui_state.music = false;
 	ui_state.running = false;
-	ui_state.speed = 5;
+	ui_state.speed = 3;
 
 	systick_init();
 
@@ -111,7 +105,14 @@ int main()
 			break;
 
 		case buttonStartStop:
-			ui_state.running = !ui_state.running;
+			if(ui_state.running){
+				track_disable(&track_state);
+				ui_state.running = false;
+			}else{
+				track_enable(&track_state);
+				ui_state.running = true;
+			}
+			
 
 		default:
 			break;
@@ -161,26 +162,14 @@ void SysTick_Handler(void)
 	// as a warning, if more than this length of time
 	// passes before triggering, you may miss your
 	// interrupt.
-	int count = SysTick->CNT;
 	SysTick->CMP += (FUNCONF_SYSTEM_CORE_CLOCK / SYSTICK_INT_HZ);
 
 	// clear IRQ
 	SysTick->SR = 0;
 
-	// Guard rail bit-bang PWM
-	tick_count.guard_pwm ^= 16;
-	GPIOD->BSHR = 1 << (3 + tick_count.guard_pwm);
-	
 	// Motor advance PWM phase
 	if(ui_state.running){
-		if(tick_count.speed++ > 10-ui_state.speed){
-			PhasePWM_step(196);
-			tick_count.speed = 0;
-		}
+		track_step(&track_state, 1);
 	}
 
-	count = SysTick->CNT - count;
-	if(systick_count_max<count){
-		systick_count_max = count;
-	}
 }
