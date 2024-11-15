@@ -6,8 +6,8 @@
 
 // PWM Frequency (Hz)
 #define TRACK_PWM_FREQ 100000
-// Track PWM maximum power [0, 1]
-#define TRACK_PWM_POWER_PCT 82
+// Track PWM maximum power [0, 100]
+#define TRACK_PWM_POWER_PCT 83
 // Guard PWM duty cycle percent [0, 100]
 #define GUARD_PWM_POWER_PCT 60
 
@@ -34,8 +34,8 @@ typedef enum {
 } phase_num_t;
 
 // Quarter sine wave, scaled to max pwm duty
-const int16_t lut[64] = {
-    0.0000000000*MAX_DUTY, 0.0245412285*MAX_DUTY, 0.0490676743*MAX_DUTY,
+const int16_t lut_sine[64] = {
+    0.0000000000*MAX_DUTY, (0.0245412285*MAX_DUTY), 0.0490676743*MAX_DUTY,
     0.0735645636*MAX_DUTY, 0.0980171403*MAX_DUTY, 0.1224106752*MAX_DUTY,
     0.1467304745*MAX_DUTY, 0.1709618888*MAX_DUTY, 0.1950903220*MAX_DUTY,
     0.2191012402*MAX_DUTY, 0.2429801799*MAX_DUTY, 0.2667127575*MAX_DUTY,
@@ -204,13 +204,13 @@ int16_t sine_lut(uint8_t i){
     // Extract value from quarter wave LUT
 
     if (i < 64) {
-        return lut[i];
+        return lut_sine[i];
     } else if (i < 128){
-        return lut[127-i];
+        return lut_sine[127-i];
     } else if (i < 192){
-        return -lut[i-128];
+        return -lut_sine[i-128];
     } else {
-        return -lut[255-i];
+        return -lut_sine[255-i];
     }
 
 }
@@ -228,15 +228,53 @@ void track_step(track_state_t * track_state, uint8_t steps)
     int16_t duty1 = sine_lut(phase_idx);
     int16_t duty2 = sine_lut(phase_idx + 64);
     
+
+    //int16_t duty1 = phase_idx*MAX_DUTY>>8 - MAX_DUTY/2;
+    //int16_t duty2 = (phase_idx+64)*MAX_DUTY>>8 - MAX_DUTY/2;
+    
     PhasePWM_setPhaseDuty(PHASE_A, duty1);
     PhasePWM_setPhaseDuty(PHASE_B, duty2);
     
 }
 
 void track_init(track_state_t * state){
+    // Enable GPIOs
+	RCC->APB2PCENR |= RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOC;
+
+	// C4 T1CH1 PWM A1
+	GPIOC->CFGLR &= ~(0xf<<(4*4));
+	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*4);
+
+	// C5 T1CH3 PWM A2
+	GPIOC->CFGLR &= ~(0xf<<(4*5));
+	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*5);
+
+	// D4 T1CH4 PWM B1
+	GPIOD->CFGLR &= ~(0xf<<(4*4));
+	GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*4);
+
+	// C7 T1CH2 PWM B2
+	GPIOC->CFGLR &= ~(0xf<<(4*7));
+	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*7);
+
+	// D3 T2CH2 PWM G2
+    GPIOD->CFGLR &= ~(0xf<<(4*3));
+    GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*3);
+
+	//Activate clock for Alternate Pin function
+	RCC->APB2PCENR |= RCC_AFIOEN;
+
+	// // Set pin mapping for tim2
+	AFIO->PCFR1 |= ((0b00) << 8); 
+
+	// Set pin mapping for tim1
+	AFIO->PCFR1 |= ((0b11) << 6);
+
+    // Init timers
     PhasePWM_initTim1();
     PhasePWM_initTim2();    
     
+    //state inits
     state->phase_idx = 0;
     state->enabled = false;
 

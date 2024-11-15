@@ -10,7 +10,7 @@
 #include "buttons.h"
 #include "PhasePWM.h"
 
-#define SYSTICK_INT_HZ 5000
+#define SYSTICK_INT_HZ (2000)
 
 uint8_t yellow [3] = {0x08, 0x08, 0x00};
 uint8_t black [3] = {0x00, 0x00, 0x00};
@@ -42,41 +42,6 @@ int main()
 {
 	SystemInit();
 	
-	// Enable GPIOs
-	RCC->APB2PCENR |= RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOC;
-
-	// C4 T1CH1 PWM A1
-	GPIOC->CFGLR &= ~(0xf<<(4*4));
-	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*4);
-
-	// C5 T1CH3 PWM A2
-	GPIOC->CFGLR &= ~(0xf<<(4*5));
-	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*5);
-
-	// D4 T1CH4 PWM B1
-	GPIOD->CFGLR &= ~(0xf<<(4*4));
-	GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*4);
-
-	// C7 T1CH2 PWM B2
-	GPIOC->CFGLR &= ~(0xf<<(4*7));
-	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*7);
-
-	// D3 T2CH2 PWM G2
-  GPIOD->CFGLR &= ~(0xf<<(4*3));
-  GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*3);
-
-	// // Alternate Function Reset 
-	// RCC->APB2PCENR |= RCC_APB2Periph_AFIO;
-
-	//Activate clock for Alternate Pin function
-	RCC->APB2PCENR |= RCC_AFIOEN;
-
-	// // Set pin mapping for tim2
-	AFIO->PCFR1 |= ((0b00) << 8); 
-
-	// Set pin mapping for tim1
-	AFIO->PCFR1 |= ((0b11) << 6);
-
 	// Init phase PWM timer
 	track_init(&track_state);
 
