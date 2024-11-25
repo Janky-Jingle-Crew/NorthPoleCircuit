@@ -2,14 +2,27 @@
 
 #include "funconfig.h"
 #include "stdint.h"
+#include "stdbool.h"
 #include "ch32v003fun.h"
+#include "gpio.h"
 
 // PWM Frequency (Hz)
 #define TRACK_PWM_FREQ 100000
 // Track PWM maximum power [0, 100]
-#define TRACK_PWM_POWER_PCT 83
+#define TRACK_PWM_POWER_PCT 86
 // Guard PWM duty cycle percent [0, 100]
 #define GUARD_PWM_POWER_PCT 60
+
+// Pins, [Ax Bx] should be tied to Timer 1, Gx to timer 2.
+gpio_t PWM_A1 = {GPIOC, 4};
+gpio_t PWM_A2 = {GPIOC, 5};
+gpio_t PWM_B1 = {GPIOD, 4};
+gpio_t PWM_B2 = {GPIOC, 7};
+gpio_t PWM_G1 = {GPIOD, 3};
+gpio_t PWM_G2 = {GPIOC, 0};
+
+gpio_t PHASE_EN = {GPIOC, 3};
+gpio_t GUARD_EN = {GPIOC, 6};
 
 // PWM Prescale
 #define PRESCALE_DIV1 0
@@ -127,9 +140,11 @@ void PhasePWM_initTim2(void)
 
     // PWM Mode 2
     TIM2->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1 | TIM_OC2M_0;
+    TIM2->CHCTLR2 |= TIM_OC3M_2 | TIM_OC3M_1 | TIM_OC3M_0;
 
     // Enable Channel outputs
     TIM2->CCER |= TIM_CC2E | TIM_CC2P;
+    TIM2->CCER |= TIM_CC3E | TIM_CC3P;
 
     // initialize counter
     TIM2->SWEVGR |= TIM_UG;
@@ -241,30 +256,13 @@ void track_init(track_state_t * state){
     // Enable GPIOs
 	RCC->APB2PCENR |= RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOC;
 
-	// C4 T1CH1 PWM A1
-	GPIOC->CFGLR &= ~(0xf<<(4*4));
-	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*4);
-
-	// C5 T1CH3 PWM A2
-	GPIOC->CFGLR &= ~(0xf<<(4*5));
-	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*5);
-
-	// D4 T1CH4 PWM B1
-	GPIOD->CFGLR &= ~(0xf<<(4*4));
-	GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*4);
-
-	// C7 T1CH2 PWM B2
-	GPIOC->CFGLR &= ~(0xf<<(4*7));
-	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*7);
-
-	// D3 T2CH2 PWM G1
-    GPIOD->CFGLR &= ~(0xf<<(4*3));
-    GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*3);
-
-    // C0 T2CH3 PWM G2
-    GPIOC->CFGLR &= ~(0xf<<(4*0));
-    GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*0);
-
+	// Init GPIOs
+    gpio_init_custom(&PWM_A1, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
+    gpio_init_custom(&PWM_A2, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
+    gpio_init_custom(&PWM_B1, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
+    gpio_init_custom(&PWM_B2, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
+    gpio_init_custom(&PWM_G1, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
+    gpio_init_custom(&PWM_G2, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
 
 	//Activate clock for Alternate Pin function
 	RCC->APB2PCENR |= RCC_AFIOEN;
@@ -279,13 +277,9 @@ void track_init(track_state_t * state){
     PhasePWM_initTim1();
     PhasePWM_initTim2();    
 
-    // C3 Guard Enable
-    GPIOC->CFGLR &= ~(0xf<<(4*3));
-    GPIOC->CFGLR |= (GPIO_Speed_2MHz | GPIO_CNF_OUT_PP)<<(4*3);
-    
-    // C6 Phase Enable
-    GPIOC->CFGLR &= ~(0xf<<(4*6));
-    GPIOC->CFGLR |= (GPIO_Speed_2MHz | GPIO_CNF_OUT_PP)<<(4*6);
+    // Enable pins of motor controllers
+    gpio_init(&PHASE_EN);
+    gpio_init(&GUARD_EN);
     
     //state inits
     state->phase_idx = 0;
@@ -300,7 +294,7 @@ void track_enable(track_state_t * state){
     PhasePWM_setPhaseDuty(PHASE_B, state->phase_idx + 64);
 
     // Guard duty
-    TIM2->CH2CVR = (GUARD_DUTY);
+    TIM2->CH3CVR = (GUARD_DUTY);
 
     GPIOC->BSHR |= 1<<3;
     GPIOC->BSHR |= 1<<6;
@@ -316,7 +310,7 @@ void track_disable(track_state_t * state){
     PhasePWM_setPhaseDuty(PHASE_B, 0);
 
     // Guard duty
-    TIM2->CH2CVR = 0;
+    TIM2->CH3CVR = 0;
 
     GPIOC->BSHR |= 1<<(3+16);
     GPIOC->BSHR |= 1<<(6+16);
