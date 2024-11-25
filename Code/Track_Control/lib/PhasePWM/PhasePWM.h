@@ -257,9 +257,14 @@ void track_init(track_state_t * state){
 	GPIOC->CFGLR &= ~(0xf<<(4*7));
 	GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*7);
 
-	// D3 T2CH2 PWM G2
+	// D3 T2CH2 PWM G1
     GPIOD->CFGLR &= ~(0xf<<(4*3));
     GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*3);
+
+    // C0 T2CH3 PWM G2
+    GPIOC->CFGLR &= ~(0xf<<(4*0));
+    GPIOC->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP_AF)<<(4*0);
+
 
 	//Activate clock for Alternate Pin function
 	RCC->APB2PCENR |= RCC_AFIOEN;
@@ -273,6 +278,14 @@ void track_init(track_state_t * state){
     // Init timers
     PhasePWM_initTim1();
     PhasePWM_initTim2();    
+
+    // C3 Guard Enable
+    GPIOC->CFGLR &= ~(0xf<<(4*3));
+    GPIOC->CFGLR |= (GPIO_Speed_2MHz | GPIO_CNF_OUT_PP)<<(4*3);
+    
+    // C6 Phase Enable
+    GPIOC->CFGLR &= ~(0xf<<(4*6));
+    GPIOC->CFGLR |= (GPIO_Speed_2MHz | GPIO_CNF_OUT_PP)<<(4*6);
     
     //state inits
     state->phase_idx = 0;
@@ -289,6 +302,9 @@ void track_enable(track_state_t * state){
     // Guard duty
     TIM2->CH2CVR = (GUARD_DUTY);
 
+    GPIOC->BSHR |= 1<<3;
+    GPIOC->BSHR |= 1<<6;
+
     // Enable timer counters
     //TIM1->CTLR1 |= TIM_CEN;
     //TIM2->CTLR2 |= TIM_CEN;
@@ -301,6 +317,9 @@ void track_disable(track_state_t * state){
 
     // Guard duty
     TIM2->CH2CVR = 0;
+
+    GPIOC->BSHR |= 1<<(3+16);
+    GPIOC->BSHR |= 1<<(6+16);
 
     // Disable timer counters
     //TIM1->CTLR1 &= ~TIM_CEN;

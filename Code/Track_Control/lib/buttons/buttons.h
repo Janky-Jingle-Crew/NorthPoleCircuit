@@ -6,17 +6,17 @@
 
 uint32_t endtime;
 
-const gpio_t spd_dec_button_gpio = {GPIOC, 0};
-const gpio_t start_button_gpio = {GPIOC, 1}; 
-const gpio_t spd_inc_button_gpio = {GPIOC, 2}; 
-const gpio_t music_button_gpio = {GPIOA, 1}; 
+const gpio_t spd_dec_button_gpio = {GPIOA, 1};
+const gpio_t start_button_gpio = {GPIOA, 2}; 
+const gpio_t spd_inc_button_gpio = {GPIOD, 0}; 
+//const gpio_t music_button_gpio = {GPIOA, 1}; 
 //const gpio_t next_button_gpio = {GPIOC, 6}; // Not enabled on current version
 
 const gpio_t * button_gpios[] = {
     &spd_dec_button_gpio,
     &start_button_gpio,
     &spd_inc_button_gpio,
-    &music_button_gpio,
+//    &music_button_gpio,
 //    &next_button_gpio,
 };
 
@@ -24,7 +24,7 @@ typedef enum {
     buttonSpeedDec,
     buttonStartStop,
     buttonSpeedInc,
-    buttonMusic,
+//    buttonMusic,
 //    buttonNextTrack,
     buttonNone,
 } buttonPress_t;
