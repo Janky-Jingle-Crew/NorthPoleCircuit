@@ -1,0 +1,122 @@
+(footprint "tooling_hole"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 -0.5 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "20464535-879f-4b2d-ab10-5afd2433b994")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "tooling_hole"
+		(at 0 1 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "7c864f6c-0987-48ad-8f6f-04654e335457")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "a75a381e-7ecd-4ce4-9350-2fca880ca5e6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "7cb48729-d510-41a2-bdb4-c0df904e9a94")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "7e919230-24e9-40a4-bbfe-7ff8bd36a00b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_text user "${REFERENCE}"
+		(at 0 2.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "f77ba6b9-a35f-4719-876e-22231fa97dfe")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "" np_thru_hole circle
+		(at 0 0)
+		(size 1.3 1.3)
+		(drill 1.152)
+		(layers "*.Mask")
+		(uuid "cea3c9e9-a0b5-42b9-8638-d41d0f63cdd3")
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "*.Cu" "Dwgs.User")
+		(uuid "3659a46f-6744-432c-80f3-84762c183ab8")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(keepout
+			(tracks not_allowed)
+			(vias not_allowed)
+			(pads not_allowed)
+			(copperpour not_allowed)
+			(footprints not_allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 0.165778 -0.726321) (xy 0.323243 -0.671222) (xy 0.4645 -0.582464) (xy 0.582464 -0.4645) (xy 0.671222 -0.323243)
+				(xy 0.726321 -0.165778) (xy 0.745 0) (xy 0.726321 0.165778) (xy 0.671222 0.323243) (xy 0.582464 0.4645)
+				(xy 0.4645 0.582464) (xy 0.323243 0.671222) (xy 0.165778 0.726321) (xy 0 0.745) (xy -0.165778 0.726321)
+				(xy -0.323243 0.671222) (xy -0.4645 0.582464) (xy -0.582464 0.4645) (xy -0.671222 0.323243) (xy -0.726321 0.165778)
+				(xy -0.745 0) (xy -0.726321 -0.165778) (xy -0.671222 -0.323243) (xy -0.582464 -0.4645) (xy -0.4645 -0.582464)
+				(xy -0.323243 -0.671222) (xy -0.165778 -0.726321) (xy 0 -0.745)
+			)
+		)
+	)
+)

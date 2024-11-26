@@ -1,4 +1,4 @@
 # PCB
 
-This folder contain the KiCAD project for the PCB, including manufacturing 
+This folder contains the KiCAD project for the PCB, including manufacturing 
 files.
