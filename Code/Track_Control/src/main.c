@@ -1,6 +1,7 @@
 #include "ch32v003fun.h"
 #include <stdio.h>
 #include "stdbool.h"
+#include "stdlib.h"
 
 #define WS2812BSIMPLE_IMPLEMENTATION
 
@@ -10,28 +11,20 @@
 #include "buttons.h"
 #include "PhasePWM.h"
 
-#define SYSTICK_INT_HZ (2000)
+// Sign of integer, returns 1 or -1
+#define sign(i) ((i >= 0)*2 - 1)
 
-uint8_t yellow [3] = {0x08, 0x08, 0x00};
-uint8_t black [3] = {0x00, 0x00, 0x00};
+#define SYSTICK_INT_HZ (8000)
+#define MAX_SPEED 3
+volatile int speed_count = 0;
 
-int touch_vals [3] = {0};
-int touch_pins [3] = {0, 1, 2};
 
 track_state_t track_state;
 
 volatile struct {
-	uint8_t guard_pwm;
-	uint32_t speed;
-	uint32_t note;
-} tick_count;
-
-int systick_count_max;
-
-volatile struct {
 	int speed;
+	bool direction;
 	bool running;
-	bool music;
 } ui_state;
 
 #define PORTC_NUM 2
@@ -49,9 +42,8 @@ int main()
 	buttons_init();
 
 
-	ui_state.music = false;
 	ui_state.running = false;
-	ui_state.speed = 3;
+	ui_state.speed = 1;
 
 	systick_init();
 
@@ -133,8 +125,12 @@ void SysTick_Handler(void)
 	SysTick->SR = 0;
 
 	// Motor advance PWM phase
-	if(ui_state.running){
-		track_step(&track_state, 1);
+	if(ui_state.running) {
+		speed_count++;
+		if(speed_count > MAX_SPEED - abs(ui_state.speed)){
+			track_step(&track_state, sign(ui_state.speed));
+			speed_count = 0;
+		}
 	}
 
 }

@@ -9,7 +9,7 @@
 // PWM Frequency (Hz)
 #define TRACK_PWM_FREQ 100000
 // Track PWM maximum power [0, 100]
-#define TRACK_PWM_POWER_PCT 86
+#define TRACK_PWM_POWER_PCT 95
 // Guard PWM duty cycle percent [0, 100]
 #define GUARD_PWM_POWER_PCT 60
 
@@ -233,7 +233,7 @@ int16_t sine_lut(uint8_t i){
 // ----------- User facing functions ---------------
 
 // Take steps in wave
-void track_step(track_state_t * track_state, uint8_t steps) 
+void track_step(track_state_t * track_state, int8_t steps) 
 {   
     // overflow ok
     track_state->phase_idx += steps;
