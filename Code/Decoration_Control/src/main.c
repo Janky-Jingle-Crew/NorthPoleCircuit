@@ -6,8 +6,8 @@
 
 //#include "ws2812b_simple.h"
 //#define WS2812BSIMPLE_NO_IRQ_TWEAKING
-//#include "buzzer.h"
-//#include "buttons.h"
+#include "buzzer.h"
+#include "buttons.h"
 #include "PhasePWM.h"
 
 #define SYSTICK_INT_HZ (30)
@@ -110,17 +110,51 @@ int main()
 	track_init(&track_state);
 
 	// Init button gpios and NVIC
-	//buttons_init();
+	buttons_init();
 
+	t2pwm_init();
 
-	ui_state.music = false;
-	ui_state.running = false;
-	ui_state.speed = 3;
+	music_on();
+	music_off();
 
 	systick_init();
 
+
 	while(1) {
-		Delay_Ms(100);
+
+		if(buttons_read_rising() == buttonMusic){
+			if (muted)
+			{
+				music_on();
+			}else{
+				music_off();
+			}
+			
+		}
+
+		if(!muted) {
+
+			ms_cnt += 20;
+			if (ms_cnt > curr_song[k].duration)
+			{
+				ms_cnt = 0; 
+
+				if (curr_song[k + 1].note == 0)
+				{
+					tone(0);
+				}
+				else
+				{
+					tone(freqz[curr_song[k + 1].note - 1]);
+				}
+
+				k++;
+				k = k % (*note_end - 1);
+			}
+		}
+
+		Delay_Ms(20);
+
 	}
 }
 
