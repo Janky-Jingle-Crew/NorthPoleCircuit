@@ -5,6 +5,7 @@
 
 #include "buttons.h"
 #include "PhasePWM.h"
+#include "i2c_slave.h"
 
 // Sign of integer, returns 1 or -1
 #define sign(i) ((i >= 0)*2 - 1)
@@ -13,6 +14,10 @@
 #define MAX_SPEED 3
 volatile int speed_count = 0;
 volatile int speed_increment = 0;
+volatile uint8_t i2c_registers[2] = {0x00};
+
+gpio_t SDA = {GPIOC, 1};
+gpio_t SCL = {GPIOC, 2};
 
 track_state_t track_state;
 
@@ -25,6 +30,10 @@ volatile struct {
 #define PORTC_NUM 2
 
 void systick_init(void);
+
+void onWrite(uint8_t reg, uint8_t length) {
+	printf("%x \n", i2c_registers[0]);
+}
 
 int main()
 {
@@ -43,6 +52,13 @@ int main()
 	systick_init();
 
 	PhasePWM_initTim2_IRQ();
+
+	//I2C
+	gpio_init_custom(&SDA, GPIO_Speed_10MHz, GPIO_CNF_OUT_OD_AF);
+	gpio_init_custom(&SCL, GPIO_Speed_10MHz, GPIO_CNF_OUT_OD_AF);
+	
+    SetupI2CSlave(0x07, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
+	//I2C
 
 	while(1) {
 		buttonPress_t pressed = buttons_read_rising();
@@ -79,6 +95,8 @@ int main()
 
 		if (speed_increment >= TRACK_PWM_FREQ) {
 			printf("SpeedInc: %d\n", speed_increment);
+			printf("%x \n", i2c_registers[0]);
+			printf("%x \n", i2c_registers[1]);
 			speed_increment = 0;
 		}
 
