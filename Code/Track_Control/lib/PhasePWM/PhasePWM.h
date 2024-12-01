@@ -97,20 +97,19 @@ void PhasePWM_initTim1(void)
 	TIM1->PSC = PRESCALE_DIV1;
 
     // Set frequency ATRLR = clock/(freq*(PRESCALE_DIV+1))
-    // 48 MHz clock, 20 kHz PWM, PRESCALE_DIV = 0;
     TIM1->ATRLR = (PWM_PERIOD);
     
-    // Output, positive polarity
-    TIM1->CCER |= TIM_CC1E | TIM_CC1P;
-    TIM1->CCER |= TIM_CC2E | TIM_CC2P;
-    TIM1->CCER |= TIM_CC3E | TIM_CC3P;
-    TIM1->CCER |= TIM_CC4E | TIM_CC4P;
+    // Output enabled, active high -> leave CCxP bit as 0
+    TIM1->CCER |= TIM_CC1E;
+    TIM1->CCER |= TIM_CC2E;
+    TIM1->CCER |= TIM_CC3E;
+    TIM1->CCER |= TIM_CC4E;
 
-    // PWM Mode 2, 0b111, high when counter > compare value
-    TIM1->CHCTLR1 |= TIM_OC1M_2 | TIM_OC1M_1 | TIM_OC1M_0;
-    TIM1->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1 | TIM_OC2M_0;
-    TIM1->CHCTLR2 |= TIM_OC3M_2 | TIM_OC3M_1 | TIM_OC3M_0;
-    TIM1->CHCTLR2 |= TIM_OC4M_2 | TIM_OC4M_1 | TIM_OC4M_0;
+    // PWM Mode 1, 0b110, high when counter < compare value
+    TIM1->CHCTLR1 |= TIM_OC1M_2 | TIM_OC1M_1;
+    TIM1->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1;
+    TIM1->CHCTLR2 |= TIM_OC3M_2 | TIM_OC3M_1;
+    TIM1->CHCTLR2 |= TIM_OC4M_2 | TIM_OC4M_1;
 
     // CTLR1: default is up, events generated, edge align
 	// enable auto-reload of preload
@@ -137,23 +136,36 @@ void PhasePWM_initTim2(void)
     TIM2->PSC = PRESCALE_DIV1;
     TIM2->ATRLR = PWM_PERIOD;
     TIM2->CH2CVR = 0;
+    TIM2->CH3CVR = 0;
 
-    // PWM Mode 2
-    TIM2->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1 | TIM_OC2M_0;
-    TIM2->CHCTLR2 |= TIM_OC3M_2 | TIM_OC3M_1 | TIM_OC3M_0;
+    // PWM Mode 1,  0b110, high when counter < compare value
+    TIM2->CHCTLR1 |= TIM_OC2M_2 | TIM_OC2M_1;
+    TIM2->CHCTLR2 |= TIM_OC3M_2 | TIM_OC3M_1;
 
-    // Enable Channel outputs
-    TIM2->CCER |= TIM_CC2E | TIM_CC2P;
-    TIM2->CCER |= TIM_CC3E | TIM_CC3P;
+    // Output enabled, active high -> leave CCxP bit as 0
+    TIM2->CCER |= TIM_CC2E;
+    TIM2->CCER |= TIM_CC3E;
 
-    // initialize counter
+    // initialize counter and update timer settings
     TIM2->SWEVGR |= TIM_UG;
 
     // Enable TIM2
     TIM2->CTLR1 |= TIM_CEN;
 }
 
+void PhasePWM_initTim2_IRQ(void) 
+{   
+    // Needs to have lower prio than EXTI for button read -> set higher than 7
+    NVIC_SetPriority(TIM2_IRQn, 24);
+    NVIC_EnableIRQ(TIM2_IRQn);
 
+    // Enable update interrupts for timer 2
+    TIM2->DMAINTENR |= TIM_UIE;
+
+    // Update timer settings
+    TIM2->SWEVGR |= TIM_UG;
+
+}
 
 
 void PhasePWM_setDuty(uint8_t ch, uint16_t duty) 
@@ -290,8 +302,8 @@ void track_init(track_state_t * state){
 
 void track_enable(track_state_t * state){
     // Set PWMs
-    PhasePWM_setPhaseDuty(PHASE_A, state->phase_idx);
-    PhasePWM_setPhaseDuty(PHASE_B, state->phase_idx + 64);
+    PhasePWM_setPhaseDuty(PHASE_A, 0);
+    PhasePWM_setPhaseDuty(PHASE_B, 0);
 
     // Guard duty
     TIM2->CH3CVR = (GUARD_DUTY);
@@ -310,6 +322,7 @@ void track_disable(track_state_t * state){
     PhasePWM_setPhaseDuty(PHASE_B, 0);
 
     // Guard duty
+    TIM2->CH2CVR = 0;
     TIM2->CH3CVR = 0;
 
     GPIOC->BSHR |= 1<<(3+16);
