@@ -9,14 +9,9 @@
 #include "buzzer.h"
 #include "buttons.h"
 #include "PhasePWM.h"
+#include "i2c.h"
 
 #define SYSTICK_INT_HZ (30)
-
-uint8_t yellow [3] = {0x08, 0x08, 0x00};
-uint8_t black [3] = {0x00, 0x00, 0x00};
-
-int touch_vals [3] = {0};
-int touch_pins [3] = {0, 1, 2};
 
 track_state_t track_state;
 
@@ -43,6 +38,7 @@ void systick_init(void);
 #define SPEED_MAX 50
 #define SPEED_RAND_RANGE 16
 
+uint8_t buf[2] = {0x77, 0x99};
 
 typedef struct walk_state walk_state_t;
 
@@ -118,6 +114,15 @@ int main()
 	music_off();
 
 	systick_init();
+	
+	//I2C-------------------------
+
+	i2c_init();
+	i2c_write(0x07, 0x00, buf, sizeof(buf));
+
+	//I2C------------------------
+
+	
 
 
 	while(1) {
