@@ -3,11 +3,6 @@
 #include "stdbool.h"
 #include "stdlib.h"
 
-#define WS2812BSIMPLE_IMPLEMENTATION
-
-#include "ws2812b_simple.h"
-//#define WS2812BSIMPLE_NO_IRQ_TWEAKING
-//#include "buzzer.h"
 #include "buttons.h"
 #include "PhasePWM.h"
 
@@ -17,7 +12,7 @@
 #define SYSTICK_INT_HZ (8000)
 #define MAX_SPEED 3
 volatile int speed_count = 0;
-
+volatile int speed_increment = 0;
 
 track_state_t track_state;
 
@@ -47,6 +42,8 @@ int main()
 
 	systick_init();
 
+	PhasePWM_initTim2_IRQ();
+
 	while(1) {
 		buttonPress_t pressed = buttons_read_rising();
 
@@ -65,6 +62,7 @@ int main()
 			if(ui_state.running){
 				track_disable(&track_state);
 				ui_state.running = false;
+				ui_state.speed = 0;
 			}else{
 				track_enable(&track_state);
 				ui_state.running = true;
@@ -79,7 +77,12 @@ int main()
 			printf("Pressed button: %d\n", pressed);
 		}
 
-		Delay_Ms(100);
+		if (speed_increment >= TRACK_PWM_FREQ) {
+			printf("SpeedInc: %d\n", speed_increment);
+			speed_increment = 0;
+		}
+
+		Delay_Ms(50);
 	}
 }
 
@@ -133,4 +136,16 @@ void SysTick_Handler(void)
 		}
 	}
 
+}
+
+
+void TIM2_IRQHandler(void) __attribute__((interrupt));
+void TIM2_IRQHandler(void)
+{	
+	// Clear IRQ
+	if (TIM2->INTFR & TIM_UIF)
+	{	
+		speed_increment++;
+		TIM2->INTFR &= ~(TIM_UIF);
+	}
 }
