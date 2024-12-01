@@ -31,6 +31,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "gpio.h"
+
+gpio_t SDA = {GPIOC, 1};
+gpio_t SCL = {GPIOC, 2};
 
 typedef void (*i2c_write_callback_t)(uint8_t reg, uint8_t length);
 typedef void (*i2c_read_callback_t)(uint8_t reg);
@@ -68,12 +72,15 @@ void SetupI2CSlave(uint8_t address, volatile uint8_t* registers, uint8_t size, i
     i2c_slave_state.read_callback2 = NULL;
     i2c_slave_state.read_only2 = false;
 
-    // Enable I2C1
-    RCC->APB1PCENR |= RCC_APB1Periph_I2C1;
-
     // Reset I2C1 to init all regs
     RCC->APB1PRSTR |= RCC_APB1Periph_I2C1;
     RCC->APB1PRSTR &= ~RCC_APB1Periph_I2C1;
+
+    // Enable I2C1
+    RCC->APB1PCENR |= RCC_APB1Periph_I2C1;
+    
+    gpio_init_custom(&SDA, GPIO_Speed_10MHz, GPIO_CNF_OUT_OD_AF);
+	gpio_init_custom(&SCL, GPIO_Speed_10MHz, GPIO_CNF_OUT_OD_AF);
 
     I2C1->CTLR1 |= I2C_CTLR1_SWRST;
     I2C1->CTLR1 &= ~I2C_CTLR1_SWRST;

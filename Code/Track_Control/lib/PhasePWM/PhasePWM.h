@@ -156,7 +156,7 @@ void PhasePWM_initTim2(void)
 void PhasePWM_initTim2_IRQ(void) 
 {   
     // Needs to have lower prio than EXTI for button read -> set higher than 7
-    NVIC_SetPriority(TIM2_IRQn, 24);
+    NVIC_SetPriority(TIM2_IRQn, 5);
     NVIC_EnableIRQ(TIM2_IRQn);
 
     // Enable update interrupts for timer 2
@@ -265,8 +265,9 @@ void track_step(track_state_t * track_state, int8_t steps)
 }
 
 void track_init(track_state_t * state){
-    // Enable GPIOs
-	RCC->APB2PCENR |= RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOC;
+
+    // Enable GPIOs and Alternate Pin function
+	RCC->APB2PCENR |= RCC_APB2Periph_GPIOD | RCC_APB2Periph_GPIOC | RCC_AFIOEN;
 
 	// Init GPIOs
     gpio_init_custom(&PWM_A1, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
@@ -275,9 +276,6 @@ void track_init(track_state_t * state){
     gpio_init_custom(&PWM_B2, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
     gpio_init_custom(&PWM_G1, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
     gpio_init_custom(&PWM_G2, GPIO_Speed_10MHz, GPIO_CNF_OUT_PP_AF);
-
-	//Activate clock for Alternate Pin function
-	RCC->APB2PCENR |= RCC_AFIOEN;
 
 	// // Set pin mapping for tim2
 	AFIO->PCFR1 |= ((0b00) << 8); 

@@ -11,13 +11,10 @@
 #define sign(i) ((i >= 0)*2 - 1)
 
 #define SYSTICK_INT_HZ (8000)
-#define MAX_SPEED 3
+#define MAX_SPEED 80
 volatile int speed_count = 0;
-volatile int speed_increment = 0;
 volatile uint8_t i2c_registers[2] = {0x00};
 
-gpio_t SDA = {GPIOC, 1};
-gpio_t SCL = {GPIOC, 2};
 
 track_state_t track_state;
 
@@ -38,27 +35,24 @@ void onWrite(uint8_t reg, uint8_t length) {
 int main()
 {
 	SystemInit();
-	
+
 	// Init phase PWM timer
 	track_init(&track_state);
 
 	// Init button gpios and NVIC
 	buttons_init();
 
-
 	ui_state.running = false;
 	ui_state.speed = 1;
 
-	systick_init();
+	//systick_init();
+
+	//I2C
+    SetupI2CSlave(0x07, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
+	//I2C
 
 	PhasePWM_initTim2_IRQ();
 
-	//I2C
-	gpio_init_custom(&SDA, GPIO_Speed_10MHz, GPIO_CNF_OUT_OD_AF);
-	gpio_init_custom(&SCL, GPIO_Speed_10MHz, GPIO_CNF_OUT_OD_AF);
-	
-    SetupI2CSlave(0x07, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
-	//I2C
 
 	while(1) {
 		buttonPress_t pressed = buttons_read_rising();
@@ -67,11 +61,11 @@ int main()
 		{
 		
 		case buttonSpeedDec:
-			ui_state.speed--;
+			ui_state.speed-= 20;
 			break;
 
 		case buttonSpeedInc:
-			ui_state.speed++;
+			ui_state.speed+= 20;
 			break;
 
 		case buttonStartStop:
@@ -91,13 +85,8 @@ int main()
 
 		if(pressed != buttonNone){
 			printf("Pressed button: %d\n", pressed);
-		}
-
-		if (speed_increment >= TRACK_PWM_FREQ) {
-			printf("SpeedInc: %d\n", speed_increment);
 			printf("%x \n", i2c_registers[0]);
 			printf("%x \n", i2c_registers[1]);
-			speed_increment = 0;
 		}
 
 		Delay_Ms(50);
@@ -114,6 +103,7 @@ void systick_init(void)
 	SysTick->CTLR = 0;
 
 	/* enable the SysTick IRQ */
+	NVIC_SetPriority(SysTicK_IRQn, 0);
 	NVIC_EnableIRQ(SysTicK_IRQn);
 
 	/* Set the tick interval to 1ms for normal op */
@@ -140,19 +130,20 @@ void SysTick_Handler(void)
 	// as a warning, if more than this length of time
 	// passes before triggering, you may miss your
 	// interrupt.
+
 	SysTick->CMP += (FUNCONF_SYSTEM_CORE_CLOCK / SYSTICK_INT_HZ);
 
 	// clear IRQ
 	SysTick->SR = 0;
 
 	// Motor advance PWM phase
-	if(ui_state.running) {
-		speed_count++;
-		if(speed_count > MAX_SPEED - abs(ui_state.speed)){
-			track_step(&track_state, sign(ui_state.speed));
-			speed_count = 0;
-		}
-	}
+	// if(ui_state.running) {
+	// 	speed_count++;
+	// 	if(speed_count > MAX_SPEED - abs(ui_state.speed)){
+	// 		track_step(&track_state, sign(ui_state.speed));
+	// 		speed_count = 0;
+	// 	}
+	// }
 
 }
 
@@ -163,7 +154,15 @@ void TIM2_IRQHandler(void)
 	// Clear IRQ
 	if (TIM2->INTFR & TIM_UIF)
 	{	
-		speed_increment++;
 		TIM2->INTFR &= ~(TIM_UIF);
+		if(ui_state.running) 
+		{	
+			speed_count++;
+			if (speed_count > MAX_SPEED - abs(ui_state.speed)) 
+			{
+				track_step(&track_state, sign(ui_state.speed));
+				speed_count = 0;
+			}
+		}
 	}
 }
