@@ -1,8 +1,8 @@
 TODO:
-- [ ] Fully test prototype
+- [x] Fully test prototype
 - [ ] Sled design and print
 - [ ] Code for music
-- [ ] Finalize PCB and order
+- [x] Finalize PCB and order
 - [ ] Fill in this README
 
 # North Pole Circuit
@@ -20,7 +20,9 @@ Merry Christmas, and a Happy New Year! This year, we present the first *Dual-cor
 
 Special thanks to **Jeff McBride**, this project was heavily inspired by his awesome [Gauss speedway](https://jeffmcbride.net/gauss-speedway/).
 
-Also thank you **cnlohr** for the [ch32v003fun](https://github.com/cnlohr/ch32v003fun) framework which was used to program the microcontrollers.  
+Also thank you **cnlohr** for the [ch32v003fun](https://github.com/cnlohr/ch32v003fun) framework which was used to program the microcontrollers.
+
+Thanks to Ida Udd for the beautiful design of the reindeer. 
 
 ## Contributors
 The Janky Jingle Crew 2024 consists of: 
@@ -30,4 +32,6 @@ The Janky Jingle Crew 2024 consists of:
  - [Gustav Abrahamsson](https://github.com/GustavAbrahamsson): Decorations, sled design
  - [Adam Anderson](https://github.com/adaand00): Code
 
-### Previous years
+## Previous years
+
+Go to [janky-jingle-crew.com](https://janky-jingle-crew.com)
