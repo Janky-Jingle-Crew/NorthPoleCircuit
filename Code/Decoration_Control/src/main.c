@@ -110,7 +110,6 @@ int main()
 
 	t2pwm_init();
 
-	music_on();
 	music_off();
 
 	systick_init();
