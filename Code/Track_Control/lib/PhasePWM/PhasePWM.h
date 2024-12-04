@@ -312,6 +312,8 @@ void track_enable(track_state_t * state){
     // Enable timer counters
     //TIM1->CTLR1 |= TIM_CEN;
     //TIM2->CTLR2 |= TIM_CEN;
+
+    state->enabled = true;
 }
 
 void track_disable(track_state_t * state){
@@ -329,4 +331,5 @@ void track_disable(track_state_t * state){
     // Disable timer counters
     //TIM1->CTLR1 &= ~TIM_CEN;
     //TIM2->CTLR1 &= ~TIM_CEN;
+    state->enabled = false;
 }

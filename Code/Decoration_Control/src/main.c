@@ -127,12 +127,17 @@ int main()
 	while(1) {
 
 		if(buttons_read_rising() == buttonMusic){
+
+			i2c_write(0x07, 0x00, buf, sizeof(buf));
+
+			/*
 			if (muted)
 			{
 				music_on();
 			}else{
 				music_off();
 			}
+			*/
 			
 		}
 

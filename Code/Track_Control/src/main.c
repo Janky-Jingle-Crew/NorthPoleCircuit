@@ -11,7 +11,7 @@
 #define sign(i) ((i >= 0)*2 - 1)
 
 #define SYSTICK_INT_HZ (8000)
-#define MAX_SPEED 80
+#define MAX_SPEED 5
 volatile int speed_count = 0;
 volatile uint8_t i2c_registers[2] = {0x00};
 
@@ -30,11 +30,17 @@ void systick_init(void);
 
 void onWrite(uint8_t reg, uint8_t length) {
 	printf("%x \n", i2c_registers[0]);
+	printf("%x \n", i2c_registers[1]);
+	track_enable(&track_state);
 }
 
 int main()
 {
 	SystemInit();
+
+	// Turn on interrupt nesting
+	uint32_t sys = __get_INTSYSCR();
+	__set_INTSYSCR(sys | 0b10);
 
 	// Init phase PWM timer
 	track_init(&track_state);
@@ -45,13 +51,13 @@ int main()
 	ui_state.running = false;
 	ui_state.speed = 1;
 
-	//systick_init();
+	systick_init();
 
 	//I2C
     SetupI2CSlave(0x07, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
 	//I2C
 
-	PhasePWM_initTim2_IRQ();
+	//PhasePWM_initTim2_IRQ();
 
 
 	while(1) {
@@ -61,21 +67,19 @@ int main()
 		{
 		
 		case buttonSpeedDec:
-			ui_state.speed-= 20;
+			ui_state.speed -= 1;
 			break;
 
 		case buttonSpeedInc:
-			ui_state.speed+= 20;
+			ui_state.speed += 1;
 			break;
 
 		case buttonStartStop:
-			if(ui_state.running){
+			if(track_state.enabled){
 				track_disable(&track_state);
-				ui_state.running = false;
-				ui_state.speed = 0;
+				//ui_state.speed = 0;
 			}else{
 				track_enable(&track_state);
-				ui_state.running = true;
 			}
 			
 
@@ -85,8 +89,6 @@ int main()
 
 		if(pressed != buttonNone){
 			printf("Pressed button: %d\n", pressed);
-			printf("%x \n", i2c_registers[0]);
-			printf("%x \n", i2c_registers[1]);
 		}
 
 		Delay_Ms(50);
@@ -137,13 +139,13 @@ void SysTick_Handler(void)
 	SysTick->SR = 0;
 
 	// Motor advance PWM phase
-	// if(ui_state.running) {
-	// 	speed_count++;
-	// 	if(speed_count > MAX_SPEED - abs(ui_state.speed)){
-	// 		track_step(&track_state, sign(ui_state.speed));
-	// 		speed_count = 0;
-	// 	}
-	// }
+	if(track_state.enabled) {
+		speed_count++;
+		if(speed_count > MAX_SPEED - abs(ui_state.speed)){
+			track_step(&track_state, sign(ui_state.speed));
+			speed_count = 0;
+		}
+	}
 
 }
 

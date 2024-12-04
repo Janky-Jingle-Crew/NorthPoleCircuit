@@ -24,8 +24,8 @@
  * SOFTWARE.
  */
 
-#ifndef __I2C_SLAVE_H
-#define __I2C_SLAVE_H
+#ifndef I2C_SLAVE_I2C_SLAVE_H_
+#define I2C_SLAVE_I2C_SLAVE_H_
 
 #include "ch32v003fun.h"
 #include <stdint.h>
@@ -93,9 +93,9 @@ void SetupI2CSlave(uint8_t address, volatile uint8_t* registers, uint8_t size, i
     I2C1->CTLR2 |= I2C_CTLR2_ITBUFEN | I2C_CTLR2_ITEVTEN | I2C_CTLR2_ITERREN;
 
     NVIC_EnableIRQ(I2C1_EV_IRQn); // Event interrupt
-    NVIC_SetPriority(I2C1_EV_IRQn, 2 << 4);
+    NVIC_SetPriority(I2C1_EV_IRQn, 1<<7);
     NVIC_EnableIRQ(I2C1_ER_IRQn); // Error interrupt
-    NVIC_SetPriority(I2C1_ER_IRQn, 2 << 4);
+    NVIC_SetPriority(I2C1_ER_IRQn, 1<<7);
 
     // Set clock configuration
     uint32_t clockrate = 100000; // I2C Bus clock rate, must be lower than the logic clock rate
@@ -225,4 +225,4 @@ void I2C1_ER_IRQHandler(void) {
     }
 }
 
-#endif
+#endif /* I2C_SLAVE_I2C_SLAVE_H_ */
