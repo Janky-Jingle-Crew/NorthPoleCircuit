@@ -38,9 +38,9 @@ int main()
 {
 	SystemInit();
 
-	// Turn on interrupt nesting
+	// Turn on interrupt nesting and hardware stack
 	uint32_t sys = __get_INTSYSCR();
-	__set_INTSYSCR(sys | 0b10);
+	__set_INTSYSCR(sys | 0b11);
 
 	// Init phase PWM timer
 	track_init(&track_state);
@@ -128,15 +128,7 @@ void systick_init(void)
 void SysTick_Handler(void) __attribute__((interrupt));
 void SysTick_Handler(void)
 {
-	// move the compare further ahead in time.
-	// as a warning, if more than this length of time
-	// passes before triggering, you may miss your
-	// interrupt.
-
-	SysTick->CMP += (FUNCONF_SYSTEM_CORE_CLOCK / SYSTICK_INT_HZ);
-
-	// clear IRQ
-	SysTick->SR = 0;
+	
 
 	// Motor advance PWM phase
 	if(track_state.enabled) {
@@ -146,6 +138,16 @@ void SysTick_Handler(void)
 			speed_count = 0;
 		}
 	}
+
+	// move the compare further ahead in time.
+	// as a warning, if more than this length of time
+	// passes before triggering, you may miss your
+	// interrupt.
+
+	SysTick->CMP += (FUNCONF_SYSTEM_CORE_CLOCK / SYSTICK_INT_HZ);
+
+	// clear IRQ
+	SysTick->SR = 0;
 
 }
 
