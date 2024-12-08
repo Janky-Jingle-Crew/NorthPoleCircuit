@@ -10,11 +10,23 @@
 // Sign of integer, returns 1 or -1
 #define sign(i) ((i >= 0)*2 - 1)
 
-#define SYSTICK_INT_HZ (8000)
-#define MAX_SPEED 5
+// Clamping
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define CLAMP(x, lower, upper) (MIN((upper), MAX((x), (lower))))
+
+// Array Length
+#define len(a) (sizeof(a) / sizeof(*a))
+
+
+#define SYSTICK_INT_HZ (50)
+#define MAX_SPEED 90
+#define BASE_SPEED 24
 volatile int speed_count = 0;
+volatile int8_t speed_idx = 2;
 volatile uint8_t i2c_registers[2] = {0x00};
 
+static const int speed_values[] = {-90, -10, 10, 90};
 
 track_state_t track_state;
 
@@ -22,6 +34,7 @@ volatile struct {
 	int speed;
 	bool direction;
 	bool running;
+	int target_speed;
 } ui_state;
 
 #define PORTC_NUM 2
@@ -49,7 +62,7 @@ int main()
 	buttons_init();
 
 	ui_state.running = false;
-	ui_state.speed = 1;
+	ui_state.speed = speed_values[speed_idx];
 
 	systick_init();
 
@@ -57,7 +70,7 @@ int main()
     SetupI2CSlave(0x07, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
 	//I2C
 
-	//PhasePWM_initTim2_IRQ();
+	PhasePWM_initTim2_IRQ();
 
 
 	while(1) {
@@ -67,17 +80,21 @@ int main()
 		{
 		
 		case buttonSpeedDec:
-			ui_state.speed -= 1;
+			speed_idx -= 1;
+			speed_idx = CLAMP(speed_idx, 0, len(speed_values)-1);
+			ui_state.target_speed = speed_values[speed_idx];
 			break;
 
 		case buttonSpeedInc:
-			ui_state.speed += 1;
+			speed_idx += 1;
+			speed_idx = CLAMP(speed_idx, 0, len(speed_values)-1);
+			ui_state.target_speed = speed_values[speed_idx];
 			break;
 
 		case buttonStartStop:
 			if(track_state.enabled){
 				track_disable(&track_state);
-				//ui_state.speed = 0;
+				ui_state.speed = 0;
 			}else{
 				track_enable(&track_state);
 			}
@@ -88,7 +105,8 @@ int main()
 		}
 
 		if(pressed != buttonNone){
-			printf("Pressed button: %d\n", pressed);
+			//printf("Pressed button: %d\n", pressed);
+			printf("speed_idx: %d\n", speed_idx);
 		}
 
 		Delay_Ms(50);
@@ -128,14 +146,26 @@ void systick_init(void)
 void SysTick_Handler(void) __attribute__((interrupt));
 void SysTick_Handler(void)
 {
-	
+ 	
 
-	// Motor advance PWM phase
-	if(track_state.enabled) {
-		speed_count++;
-		if(speed_count > MAX_SPEED - abs(ui_state.speed)){
-			track_step(&track_state, sign(ui_state.speed));
-			speed_count = 0;
+	// // Motor advance PWM phase
+	// if(track_state.enabled) {
+	// 	speed_count++;
+	// 	if(speed_count > MAX_SPEED - abs(ui_state.speed)){
+	// 		track_step(&track_state, sign(ui_state.speed));
+	// 		speed_count = 0;
+	// 	}
+	// }
+
+		// Ramp speed
+	if (ui_state.speed != ui_state.target_speed) {
+		if (ui_state.speed < ui_state.target_speed) 
+		{
+			ui_state.speed += 1;
+		} 
+		else if (ui_state.speed > ui_state.target_speed) 
+		{
+			ui_state.speed -= 1;
 		}
 	}
 
@@ -159,11 +189,13 @@ void TIM2_IRQHandler(void)
 	if (TIM2->INTFR & TIM_UIF)
 	{	
 		TIM2->INTFR &= ~(TIM_UIF);
-		if(ui_state.running) 
+	
+
+		// Motor advance PWM phase
+		if(track_state.enabled) 
 		{	
 			speed_count++;
-			if (speed_count > MAX_SPEED - abs(ui_state.speed)) 
-			{
+			if(speed_count > MAX_SPEED - abs(ui_state.speed) + BASE_SPEED){
 				track_step(&track_state, sign(ui_state.speed));
 				speed_count = 0;
 			}
