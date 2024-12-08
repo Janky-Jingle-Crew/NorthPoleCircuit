@@ -19,14 +19,21 @@
 #define len(a) (sizeof(a) / sizeof(*a))
 
 
-#define SYSTICK_INT_HZ (50)
-#define MAX_SPEED 90
-#define BASE_SPEED 24
+// Ramp frequency
+#define SYSTICK_INT_HZ (20)
+
+// Maximum interval
+#define BASE_INTERVAL 1000 
+
 volatile int speed_count = 0;
 volatile int8_t speed_idx = 2;
 volatile uint8_t i2c_registers[2] = {0x00};
+volatile int step_interval = BASE_INTERVAL;
 
-static const int speed_values[] = {-90, -10, 10, 90};
+// Step interval = BASE_INTERVAL / speed_values 
+// Ex. 60 -> 1 step per 16 ticks
+// 20 -> 1 step per 50 ticks 
+static const int speed_values[] = {-60, -20, 20, 60};
 
 track_state_t track_state;
 
@@ -35,6 +42,7 @@ volatile struct {
 	bool direction;
 	bool running;
 	int target_speed;
+	uint32_t step_interval;
 } ui_state;
 
 #define PORTC_NUM 2
@@ -62,8 +70,8 @@ int main()
 	buttons_init();
 
 	ui_state.running = false;
-	ui_state.speed = speed_values[speed_idx];
-
+	ui_state.speed = 1;
+	ui_state.target_speed = speed_values[speed_idx];
 	systick_init();
 
 	//I2C
@@ -94,7 +102,7 @@ int main()
 		case buttonStartStop:
 			if(track_state.enabled){
 				track_disable(&track_state);
-				ui_state.speed = 0;
+				ui_state.speed = 1;
 			}else{
 				track_enable(&track_state);
 			}
@@ -147,28 +155,24 @@ void SysTick_Handler(void) __attribute__((interrupt));
 void SysTick_Handler(void)
 {
  	
+	// Ramp speed
+	if(track_state.enabled) 
+	{
+		if (ui_state.speed != ui_state.target_speed) {
+			if (ui_state.speed < ui_state.target_speed) 
+			{
+				ui_state.speed += 1;
+			} 
+			else if (ui_state.speed > ui_state.target_speed) 
+			{
+				ui_state.speed -= 1;
+			}
 
-	// // Motor advance PWM phase
-	// if(track_state.enabled) {
-	// 	speed_count++;
-	// 	if(speed_count > MAX_SPEED - abs(ui_state.speed)){
-	// 		track_step(&track_state, sign(ui_state.speed));
-	// 		speed_count = 0;
-	// 	}
-	// }
-
-		// Ramp speed
-	if (ui_state.speed != ui_state.target_speed) {
-		if (ui_state.speed < ui_state.target_speed) 
-		{
-			ui_state.speed += 1;
-		} 
-		else if (ui_state.speed > ui_state.target_speed) 
-		{
-			ui_state.speed -= 1;
+			// Convert to step interval for linear speed conversion
+			ui_state.step_interval = (abs(ui_state.speed) > 0) ? BASE_INTERVAL / abs(ui_state.speed) : BASE_INTERVAL;
 		}
 	}
-
+	
 	// move the compare further ahead in time.
 	// as a warning, if more than this length of time
 	// passes before triggering, you may miss your
@@ -195,7 +199,7 @@ void TIM2_IRQHandler(void)
 		if(track_state.enabled) 
 		{	
 			speed_count++;
-			if(speed_count > MAX_SPEED - abs(ui_state.speed) + BASE_SPEED){
+			if(speed_count > ui_state.step_interval){
 				track_step(&track_state, sign(ui_state.speed));
 				speed_count = 0;
 			}
