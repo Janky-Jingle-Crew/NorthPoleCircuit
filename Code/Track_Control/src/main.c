@@ -20,7 +20,7 @@
 
 
 // Ramp frequency
-#define SYSTICK_INT_HZ (20)
+#define SYSTICK_INT_HZ (50)
 
 // Maximum interval
 #define BASE_INTERVAL 1000 
@@ -29,6 +29,9 @@ volatile int speed_count = 0;
 volatile int8_t speed_idx = 2;
 volatile uint8_t i2c_registers[2] = {0x00};
 volatile int step_interval = BASE_INTERVAL;
+volatile bool music_running;
+volatile uint8_t music_note;
+volatile uint8_t last_music_note;
 
 // Step interval = BASE_INTERVAL / speed_values 
 // Ex. 60 -> 1 step per 16 ticks
@@ -50,9 +53,28 @@ volatile struct {
 void systick_init(void);
 
 void onWrite(uint8_t reg, uint8_t length) {
+
+	if(i2c_registers[0] == 0xff){
+		music_running = false;
+	}else{
+		music_running = true;
+		
+		if(i2c_registers[0] == 0){
+			ui_state.speed = 0;
+		}else{
+			last_music_note = music_note;
+			music_note = i2c_registers[0];
+
+			if(music_note > last_music_note){
+				ui_state.speed = 20;
+			}else{
+				ui_state.speed = -20;
+			}
+		}
+	}
+
 	printf("%x \n", i2c_registers[0]);
-	printf("%x \n", i2c_registers[1]);
-	track_enable(&track_state);
+	//printf("%x \n", i2c_registers[1]);
 }
 
 int main()
@@ -101,10 +123,10 @@ int main()
 
 		case buttonStartStop:
 			if(track_state.enabled){
-				track_disable(&track_state);
-				ui_state.speed = 1;
+				ui_state.target_speed = 0;
 			}else{
 				track_enable(&track_state);
+				ui_state.target_speed = speed_values[speed_idx];
 			}
 			
 
@@ -155,31 +177,35 @@ void SysTick_Handler(void) __attribute__((interrupt));
 void SysTick_Handler(void)
 {
  	
-	// Ramp speed
-	if(track_state.enabled) 
-	{
-		if (ui_state.speed != ui_state.target_speed) {
-			if (ui_state.speed < ui_state.target_speed) 
-			{
-				ui_state.speed += 1;
-			} 
-			else if (ui_state.speed > ui_state.target_speed) 
-			{
-				ui_state.speed -= 1;
-			}
-
-			// Convert to step interval for linear speed conversion
-			ui_state.step_interval = (abs(ui_state.speed) > 0) ? BASE_INTERVAL / abs(ui_state.speed) : BASE_INTERVAL;
-		}
-	}
-	
 	// move the compare further ahead in time.
 	// as a warning, if more than this length of time
 	// passes before triggering, you may miss your
 	// interrupt.
-
 	SysTick->CMP += (FUNCONF_SYSTEM_CORE_CLOCK / SYSTICK_INT_HZ);
 
+	// Ramp speed
+	if(track_state.enabled && (ui_state.speed != ui_state.target_speed || music_running)) 
+	{
+		
+		if (ui_state.speed < ui_state.target_speed && !music_running) 
+		{
+			ui_state.speed += 1;
+		} 
+		else if (ui_state.speed > ui_state.target_speed && !music_running) 
+		{
+			ui_state.speed -= 1;
+		}
+
+		// Convert to step interval for linear speed conversion
+		ui_state.step_interval = (abs(ui_state.speed) > 0) ? BASE_INTERVAL / abs(ui_state.speed) : BASE_INTERVAL;
+
+		// Turn off track at stand still
+		if(ui_state.target_speed == 0 && ui_state.speed == 0){
+			track_disable(&track_state);
+		}
+	}
+	
+	
 	// clear IRQ
 	SysTick->SR = 0;
 

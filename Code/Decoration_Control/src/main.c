@@ -13,7 +13,13 @@
 
 #define SYSTICK_INT_HZ (30)
 
-track_state_t track_state;
+track_state_t led_pwm_state;
+music_state_t music_state;
+
+enum comms {
+	MUSIC_OFF = 255,
+	MUSIC_NOTE_OFF = 0,
+};
 
 volatile struct {
 	uint8_t guard_pwm;
@@ -38,7 +44,16 @@ void systick_init(void);
 #define SPEED_MAX 50
 #define SPEED_RAND_RANGE 16
 
-uint8_t buf[2] = {0x77, 0x99};
+
+uint8_t buf[1] = {0x77};
+#define TRACK_MCU_I2C_ADDR 0x07
+#define TRACK_MCU_I2C_REG 0x00
+
+// Write 1 byte to the track mcu via the I2C bus
+void send_track(uint8_t val){
+	buf[0] = val;
+	i2c_write(TRACK_MCU_I2C_ADDR, TRACK_MCU_I2C_REG, buf, 1);
+}
 
 typedef struct walk_state walk_state_t;
 
@@ -103,66 +118,59 @@ int main()
 	SystemInit();
 	
 	// Init phase PWM timer
-	track_init(&track_state);
+	track_init(&led_pwm_state);
 
 	// Init button gpios and NVIC
 	buttons_init();
 
-	t2pwm_init();
+	// Init timer2 and state for music
+	music_init(&music_state);
 
-	music_off();
-
+	// Init systick timer
 	systick_init();
 	
 	//I2C-------------------------
 
 	i2c_init();
-	i2c_write(0x07, 0x00, buf, sizeof(buf));
 
 	//I2C------------------------
 
 	
+	int ms_cnt = 0;
+	int next_note = 0;
+	int next_button = 0;
 
 
 	while(1) {
 
-		if(buttons_read_rising() == buttonMusic){
+		if(ms_cnt > next_button){
+			next_button = ms_cnt + 50;
 
-			i2c_write(0x07, 0x00, buf, sizeof(buf));
+			if(buttons_read_rising() == buttonMusic){
 
-			/*
-			if (muted)
-			{
-				music_on();
-			}else{
-				music_off();
-			}
-			*/
-			
-		}
-
-		if(!muted) {
-
-			ms_cnt += 20;
-			if (ms_cnt > curr_song[k].duration)
-			{
-				ms_cnt = 0; 
-
-				if (curr_song[k + 1].note == 0)
+				if (music_state.playing)
 				{
-					tone(0);
-				}
-				else
-				{
-					tone(freqz[curr_song[k + 1].note - 1]);
-				}
+					music_off(&music_state);
+					send_track(0xff);
 
-				k++;
-				k = k % (*note_end - 1);
+				}else{
+					music_change_song(&music_state, rand()%4);
+					music_on(&music_state);
+				}
+				
 			}
 		}
 
-		Delay_Ms(20);
+		
+		if(music_state.playing && ms_cnt > next_note){
+			int8_t note = music_next_note(&music_state);
+			send_track(note);
+
+			next_note = ms_cnt + music_get_current_note_duration(&music_state);
+		}
+
+		Delay_Ms(1);
+		ms_cnt++;
 
 	}
 }

@@ -3,20 +3,14 @@
 #include "funconfig.h"
 #include "stdint.h"
 #include "ch32v003fun.h"
+#include "stdbool.h"
 
 
 #define TIM2_DEFAULT 0xff
 #define PRESCALE_DIV4 0x03
 
-volatile uint16_t ms_cnt = 0;
-volatile uint8_t k = 0;
-volatile uint8_t muted = 0;
-volatile uint32_t crack_seed = 0xbadc0de;
-volatile uint8_t crack = 1;
-volatile uint8_t pause = 0;
-
-
 unsigned int freqz[] = {
+  0,
   261, 277, 293, 311, 329, 349, 369, 391, 415, 440, 466, 493,
   523, 554, 587, 622, 659, 698, 739, 783, 830, 880, 932, 987
 };
@@ -26,9 +20,6 @@ typedef struct
     uint8_t note;
     uint16_t duration;
 } note_tt;
-
-uint16_t dur = 0;
-uint16_t freq = 0;
 
 const note_tt last_christmas[] = {{0,100},{17,737},{0,64},{17,438},{0,93},{15,108},{0,427},{10,60},{0,206},{17,193},{0,73},{17,202},{0,65},{19,161},{0,107},{15,578},{0,222},{12,191},{0,75},{12,165},{0,97},{17,214},{0,51},{17,198},{0,70},{19,180},{0,354},{15,571},{0,225},{12,64},{0,204},{14,247},{0,20},{15,266},{0,0},{14,208},{0,60},{12,880},{0,455},{19,681},{0,120},{17,806},{0,261},{12,77},{0,191},{19,197},{0,66},{20,194},{0,72},{19,166},{0,101},{17,697},{0,376},{15,63},{0,202},{14,246},{0,21},{15,207},{0,58},{14,63},{0,207},{14,412},{0,120},{15,90},{0,446},{14,218},{0,318},{10,936}, {0,1000},{0,1000}};
 const note_tt jingle[] = {{0,100},{11,105},{0,233},{11,1},{11,1},{0,166},{11,121},{0,217},{11,113},{0,55},{10,90},{0,248},{10,66},{0,103},{10,87},{0,251},{10,84},{0,84},{8,309},{0,29},{10,108},{0,60},{8,143},{0,195},{3,381},{0,127},{1,129},{0,39},{1,92},{0,76},{4,63},{0,105},{6,74},{0,95},{8,198},{0,140},{10,71},{0,97},{8,158},{0,180},{3,540},{0,137},{6,360},{0,148},{8,328},{0,10},{10,79},{0,90},{8,119},{0,219},{4,423},{0,593},{4,116},{0,52},{1,137},{0,201},{3,76},{0,92},{4,95},{0,243},{6,354},{0,153},{8,338},{0,169},{6,121},{0,47},{1,100},{0,238},{3,74},{0,95},{4,105},{0,233},{6,423},{0,254},{6,254},{0,84},{6,84},{0,84},{8,227},{0,280},{8,296},{0,211},{10,119},{0,219},{8,111},{0,58},{6,105},{0,233},{11,582},{0,1000},{0,1000},};
@@ -54,25 +45,28 @@ const note_tt * songs[] = {
 };
 
 
-const uint8_t sn = sizeof(note_tt);
+#define NOTE_SIZE (sizeof(note_tt))
 
 const uint8_t song_lengths[] = {
-  sizeof(last_christmas)/sn,    // jumping santa
-  sizeof(wish_merry)/sn,        // Snowman
-  sizeof(silent)/sn,            // Reindeer
-  sizeof(jingle)/sn,            // present
-  sizeof(feliz)/sn,             // Tree
-  sizeof(santa_down)/sn,        // Santa down
-  //sizeof(i_want)/sn,
-  //sizeof(rockin)/sn,
+  sizeof(last_christmas)/NOTE_SIZE,    // jumping santa
+  sizeof(wish_merry)/NOTE_SIZE,        // Snowman
+  sizeof(silent)/NOTE_SIZE,            // Reindeer
+  sizeof(jingle)/NOTE_SIZE,            // present
+  sizeof(feliz)/NOTE_SIZE,             // Tree
+  sizeof(santa_down)/NOTE_SIZE,        // Santa down
+  //sizeof(i_want)/NOTE_SIZE,
+  //sizeof(rockin)/NOTE_SIZE,
 };
 
+typedef struct {
+    const note_tt * curr_song;
+    uint8_t curr_song_length;
+    uint16_t note_index;
+    bool playing;
+} music_state_t;
 
-const note_tt *curr_song = last_christmas;
 
-const uint8_t *note_end = &song_lengths[0];
-
-void t2pwm_init(void)
+void _t2pwm_init(void)
 {
     // Enable TIM2
     RCC->APB1PCENR |= RCC_APB1Periph_TIM2;
@@ -117,7 +111,7 @@ void t2pwm_init(void)
 }
 
 
-void tone(uint32_t freq) {
+void _tone(uint32_t freq) {
     // ATRLR = clock/(freqz*prescaler)
     if(freq == 0){
         // If timer period (ATRLR) < compare value (CH3CVR), then PWM = 0
@@ -142,19 +136,8 @@ void tone(uint32_t freq) {
 }
 
 
-void crackling_on(void) {
-    crack = 1;
-    ms_cnt = 0;
-}
-
-void crackling_off(void) {
-    crack = 0;
-    ms_cnt = 0;
-    k = 0;
-}
-
-void music_off(void) {
-    muted = 1;
+void music_off(music_state_t * state) {
+    state->playing = false;
     Delay_Ms(2);
     TIM2->ATRLR = (uint16_t) 1023;
     TIM2->CH3CVR = (uint16_t) 1024;
@@ -163,19 +146,60 @@ void music_off(void) {
     TIM2->CTLR1 &= ~TIM_CEN;
 }
 
-void music_on(void) {
-    k = 0;
-    ms_cnt = 0;
+void music_on(music_state_t * state) {
+    state->playing = true;
+    state->note_index = 0;
+    //ms_cnt = 0;
     TIM2->CCER |= TIM_CC3E | (TIM_CC3P & TIM2_DEFAULT);
     TIM2->CTLR1 |= TIM_CEN;
-    muted = 0;
+
 }
 
-void change_song(uint8_t song_idx) {
+void music_init(music_state_t * state){
+    _t2pwm_init();
+
+    state->playing = 0;
+    state->note_index = 0;
+    state->curr_song = songs[0];
+    state->curr_song_length = song_lengths[0];
+
+    music_off(state);
+
+}
+
+void music_change_song(music_state_t * state, uint8_t song_idx) {
     //music_off();
-    curr_song = songs[song_idx];
-    note_end = &song_lengths[song_idx];
-    k = 0;
-    ms_cnt = 0;
+
+    // Check index in range
+    if(song_idx >= (sizeof(songs)/sizeof(songs[0]))){ return; }
+    state->curr_song = songs[song_idx];
+    state->curr_song_length = song_lengths[song_idx];
+    state->note_index = 0;
+    //ms_cnt = 0;
     //music_on();
+}
+
+// Play next note
+// returns: note number (0-24) of the new note, or -1 if end of song is reached
+int8_t music_next_note(music_state_t * state){
+    state->note_index++;
+    uint16_t i = state->note_index;
+
+    if(i > state->curr_song_length){
+
+        music_off(state);
+        return -1;
+    }
+
+    uint8_t note = state->curr_song[i].note;
+
+    _tone(freqz[note]);
+
+    return note;
+}
+
+uint16_t music_get_current_note_duration(const music_state_t * state){
+
+    return state->curr_song[state->note_index].duration;
+
 }
