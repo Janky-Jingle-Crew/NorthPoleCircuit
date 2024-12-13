@@ -36,19 +36,15 @@ volatile uint8_t last_music_note;
 // Step interval = BASE_INTERVAL / speed_values 
 // Ex. 60 -> 1 step per 16 ticks
 // 20 -> 1 step per 50 ticks 
-static const int speed_values[] = {-60, -20, 20, 60};
+static const int speed_values[] = {-60, -40, -20, 20, 40, 60};
 
 track_state_t track_state;
 
 volatile struct {
 	int speed;
-	bool direction;
-	bool running;
 	int target_speed;
 	uint32_t step_interval;
 } ui_state;
-
-#define PORTC_NUM 2
 
 void systick_init(void);
 
@@ -66,9 +62,9 @@ void onWrite(uint8_t reg, uint8_t length) {
 			music_note = i2c_registers[0];
 
 			if(music_note > last_music_note){
-				ui_state.speed = 20;
+				ui_state.speed = 20 + music_note/2;
 			}else{
-				ui_state.speed = -20;
+				ui_state.speed = -20 - music_note/2;
 			}
 		}
 	}
@@ -91,9 +87,9 @@ int main()
 	// Init button gpios and NVIC
 	buttons_init();
 
-	ui_state.running = false;
-	ui_state.speed = 1;
+	ui_state.speed = 0;
 	ui_state.target_speed = speed_values[speed_idx];
+	track_enable(&track_state);
 	systick_init();
 
 	//I2C
@@ -197,7 +193,7 @@ void SysTick_Handler(void)
 		}
 
 		// Convert to step interval for linear speed conversion
-		ui_state.step_interval = (abs(ui_state.speed) > 0) ? BASE_INTERVAL / abs(ui_state.speed) : BASE_INTERVAL;
+		ui_state.step_interval = (abs(ui_state.speed) > 0) ? BASE_INTERVAL / abs(ui_state.speed) : 0;
 
 		// Turn off track at stand still
 		if(ui_state.target_speed == 0 && ui_state.speed == 0){
@@ -222,7 +218,7 @@ void TIM2_IRQHandler(void)
 	
 
 		// Motor advance PWM phase
-		if(track_state.enabled) 
+		if(track_state.enabled && ui_state.step_interval > 0) 
 		{	
 			speed_count++;
 			if(speed_count > ui_state.step_interval){

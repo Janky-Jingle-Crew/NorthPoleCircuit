@@ -136,9 +136,9 @@ int main()
 	//I2C------------------------
 
 	
-	int ms_cnt = 0;
-	int next_note = 0;
-	int next_button = 0;
+	uint32_t ms_cnt = 0;
+	uint32_t next_note = 0;
+	uint32_t next_button = 0;
 
 
 	while(1) {
@@ -156,6 +156,7 @@ int main()
 				}else{
 					music_change_song(&music_state, rand()%4);
 					music_on(&music_state);
+					next_note = 0;
 				}
 				
 			}
@@ -165,8 +166,11 @@ int main()
 		if(music_state.playing && ms_cnt > next_note){
 			int8_t note = music_next_note(&music_state);
 			send_track(note);
-
-			next_note = ms_cnt + music_get_current_note_duration(&music_state);
+			if(note != 0xff){
+				next_note = ms_cnt + music_get_current_note_duration(&music_state);
+			}else{
+				next_note = 0; 
+			}
 		}
 
 		Delay_Ms(1);
