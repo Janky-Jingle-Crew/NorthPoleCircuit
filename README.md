@@ -1,10 +1,3 @@
-TODO:
-- [x] Fully test prototype
-- [ ] Sled design and print
-- [ ] Code for music
-- [x] Finalize PCB and order
-- [ ] Fill in this README
-
 # North Pole Circuit
 Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, USB-C, hyper-festive, magnetic propulsion **christmas card!*** (AI?)
 
