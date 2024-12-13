@@ -185,7 +185,7 @@ int8_t music_next_note(music_state_t * state){
     state->note_index++;
     uint16_t i = state->note_index;
 
-    if(i > state->curr_song_length){
+    if(i >= state->curr_song_length){
 
         music_off(state);
         return -1;
