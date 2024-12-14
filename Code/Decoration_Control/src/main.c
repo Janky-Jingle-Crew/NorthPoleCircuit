@@ -46,7 +46,7 @@ void systick_init(void);
 
 
 uint8_t buf[1] = {0x77};
-#define TRACK_MCU_I2C_ADDR 0x07
+#define TRACK_MCU_I2C_ADDR 0x77
 #define TRACK_MCU_I2C_REG 0x00
 
 // Write 1 byte to the track mcu via the I2C bus
@@ -154,7 +154,7 @@ int main()
 					send_track(0xff);
 
 				}else{
-					music_change_song(&music_state, rand()%4);
+					music_change_song(&music_state, rand()%NUM_SONGS);
 					music_on(&music_state);
 					next_note = 0;
 				}

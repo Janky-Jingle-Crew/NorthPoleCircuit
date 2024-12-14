@@ -72,17 +72,6 @@ const int16_t lut_sine[64] = {
     (0.9996988187*MAX_DUTY)
 };
 
-const int8_t lut2[32] = {
-   0,  25,  49,  71,  90, 106, 117, 125, 127, 125,
- 117, 106,  90,  71,  49,  25,   0, -25, -49, -71,
- -90,-106,-117,-125,-127,-125,-117,-106, -90, -71,
- -49, -25 };
-
- const int8_t lut3[16] = {
-   0,  49,  90, 117, 127, 117,  90,  49,   0, -49,
- -90,-117,-127,-117, -90, -49 };
-
-
 
 void PhasePWM_initTim1(void) 
 {
@@ -299,6 +288,11 @@ void track_init(track_state_t * state){
 
 
 void track_enable(track_state_t * state){
+
+    if(state->enabled){
+        return;
+    }
+
     // Set PWMs
     PhasePWM_setPhaseDuty(PHASE_A, 0);
     PhasePWM_setPhaseDuty(PHASE_B, 0);

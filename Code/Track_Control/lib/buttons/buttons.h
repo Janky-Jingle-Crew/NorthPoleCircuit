@@ -6,26 +6,26 @@
 
 uint32_t endtime;
 
+#define HIGH_THR 270
+#define LOW_THR 200
+
+#define NUM_READINGS 5
+
+
 const gpio_t spd_dec_button_gpio = {GPIOA, 1};
 const gpio_t start_button_gpio = {GPIOA, 2}; 
 const gpio_t spd_inc_button_gpio = {GPIOD, 0}; 
-//const gpio_t music_button_gpio = {GPIOA, 1}; 
-//const gpio_t next_button_gpio = {GPIOC, 6}; // Not enabled on current version
 
 const gpio_t * button_gpios[] = {
     &spd_dec_button_gpio,
     &start_button_gpio,
     &spd_inc_button_gpio,
-//    &music_button_gpio,
-//    &next_button_gpio,
 };
 
 typedef enum {
     buttonSpeedDec,
     buttonStartStop,
     buttonSpeedInc,
-//    buttonMusic,
-//    buttonNextTrack,
     buttonNone,
 } buttonPress_t;
 
@@ -127,13 +127,10 @@ int button_read_robust(const gpio_t * gpio, int thr, int iterations){
 buttonPress_t buttons_read_rising()
 {
 
-    int high_thr = 300;
-    int low_thr = 200;
-
     // Last sample was no press, if pressed this sample => rising edge
     if (last_button == buttonNone){
         for(int i = 0; i < num_buttons; i++){
-            if(button_read_robust(button_gpios[i], high_thr, 3)){
+            if(button_read_robust(button_gpios[i], HIGH_THR, NUM_READINGS)){
                 last_button = i;
                 return last_button;
             }
@@ -144,7 +141,7 @@ buttonPress_t buttons_read_rising()
     }
 
     // Some button previously pressed, check if it is still pressed.
-    if(!button_read_robust(button_gpios[last_button], low_thr, 3)){
+    if(!button_read_robust(button_gpios[last_button], LOW_THR, NUM_READINGS)){
         last_button = buttonNone;
     }
 

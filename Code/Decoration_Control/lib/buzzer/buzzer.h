@@ -6,7 +6,6 @@
 #include "stdbool.h"
 
 
-#define TIM2_DEFAULT 0xff
 #define PRESCALE_DIV4 0x03
 
 unsigned int freqz[] = {
@@ -31,7 +30,6 @@ const note_tt silent[] = {{0,100},{8,768},{0,7},{10,166},{0,10},{8,497},{5,1406}
 const note_tt funky[] = {{0,100},{13, 99}, {0, 251}, {13, 137}, {0, 213}, {11, 140}, {0, 210}, {13, 128}, {0, 573}, {8, 193}, {0, 509}, {8, 169}, {0, 181}, {13, 152}, {0, 199}, {18, 172}, {0, 178}, {17, 137}, {0, 213}, {13, 143}, {0, 1612}, {13, 102}, {0, 248}, {13, 125}, {0, 225}, {11, 134}, {0, 216}, {13, 128}, {0, 573}, {8, 169}, {0, 532}, {8, 146}, {0, 204}, {13, 149}, {0, 201}, {18, 178}, {0, 172}, {17, 155}, {0, 196}, {13, 146}, {0, 1610}, {1, 172}, {0, 178}, {1, 172}, {0, 178}, {1, 172}, {0, 178}, {1, 348}, {0, 2}, {5, 524}, {0, 178}, {5, 172}, {0, 178}, {5, 172}, {0, 178}, {8, 172}, {0, 178}, {8, 172}, {0, 178}, {8, 348}, {0, 2}, {17, 524}, {0, 178}, {15, 172}, {0, 178}, {13, 351}, {0, 351}, {13, 96}, {0, 254}, {13, 131}, {0, 219}, {11, 140}, {0, 210}, {13, 125}, {0, 576}, {8, 152}, {0, 550}, {8, 161}, {0, 190}, {13, 140}, {0, 210}, {18, 166}, {0, 184}, {17, 155}, {0, 196}, {13, 146},{0,1000}};
 const note_tt groove[] = {{0,100},{1,666},{0,128},{4,72},{0,201},{6,436},{0,106},{4,442},{0,95},{3,604},{0,190},{8,408},{0,140},{6,106},{0,156},{8,364},{0,179},{1,666},{0,128},{4,72},{0,201},{6,436},{0,106},{4,442},{0,95},{3,604},{0,190},{8,408},{0,140},{6,106},{0,156},{8,364},{0,173},{13,420},{0,649},{8,263},{0,16},{11,240},{0,28},{13,263},{0,0},{15,190},{0,352},{11,145},{0,392},{6,397},{0,128},{8,252},{0,16},{11,235},{0,33},{11,173},{0,638},{20,246},{0,28},{18,756},{0,39},{16,257},{0,22},{15,778},{0,16},{22,263},{0,16},{20,800},{0,806},{22,84},{0,184},{22,196},{0,336},{8,263},{0,16},{11,240},{0,28},{13,263},{0,0},{15,184},{0,358},{11,145},{0,392},{6,528},{0,0},{8,252},{0,16},{11,235},{0,33},{11,173},{0,638},{20,246},{0,28},{18,756},{0,39},{16,257},{0,22},{15,778},{0,16},{22,263},{0,16},{20,800},{0,1000}};
 const note_tt rickroll[] = {{0,100},{6,824},{0,75},{8,825},{0,74},{1,550},{0,49},{8,825},{0,74},{10,825},{0,74},{13,137},{0,12},{11,137},{0,12},{10,137},{0,12},{6,975},{0,74},{8,825},{0,75},{1,2024},{0,375},{13,137},{0,12},{11,137},{0,12},{10,137},{0,12},{6,974},{0,75},{8,825},{0,75},{1,549},{0,49},{8,825},{0,75},{10,825},{0,75},{13,137},{0,12},{11,137},{0,12},{10,137},{0,12},{6,975},{0,75},{8,824},{0,75},{1,2250},{0,150},{1,137},{0,12},{3,137},{0,12},{6,137},{0,12},{3,137},{0,12},{10,412},{0,187},{10,274},{0,25},{8,849},{0,49},{1,137},{0,12},{3,137},{0,12},{6,137},{0,12},{3,137},{0,12},{8,412},{0,187},{8,275},{0,24},{6,412},{0,37},{5,137},{0,12},{3,274},{0,25},{1,137},{0,12},{3,137},{0,12},{6,137},{0,12},{3,137},{0,12},{6,549},{0,49},{8,275},{0,24},{5,412},{0,37},{3,137},{0,12},{1,375},{0,224},{1,262},{0,37},{8,549},{0,50},{6,1149},{0,49},{1,137},{0,12},{3,137},{0,12},{6,137},{0,12},{3,137},{0,12},{10,412},{0,187},{10,275},{0,24},{8,850},{0,49},{1,137},{0,12},{3,137},{0,12},{6,137},{0,12},{3,137},{0,12},{13,550},{0,49},{5,274},{0,25},{6,412},{0,37},{5,137},{0,12},{3,275},{0,25},{1,137},{0,12},{3,137},{0,12},{6,137},{0,12},{3,137},{0,12},{6,549},{0,49},{8,275},{0,25},{5,412},{0,37},{3,137},{0,12},{1,412},{0,187},{1,275},{0,25},{8,549},{0,49},{6,1299},{0,1000}};
-const note_tt santa_down[] = {{0,300},{1,103},{0,25},{10,97},{0,1173},{10,97},{0,25},{1,103},{0,10000},{0,1000}};
 
 const note_tt * songs[] = {
   last_christmas,
@@ -39,23 +37,23 @@ const note_tt * songs[] = {
   silent,
   jingle,
   feliz,
-  santa_down,
-  //i_want,
-  //rockin,
+  i_want,
+  rockin,
 };
 
 
+#define NUM_SONGS (sizeof(songs)/sizeof(songs[0]))
+
 #define NOTE_SIZE (sizeof(note_tt))
 
-const uint8_t song_lengths[] = {
-  sizeof(last_christmas)/NOTE_SIZE,    // jumping santa
-  sizeof(wish_merry)/NOTE_SIZE,        // Snowman
-  sizeof(silent)/NOTE_SIZE,            // Reindeer
-  sizeof(jingle)/NOTE_SIZE,            // present
-  sizeof(feliz)/NOTE_SIZE,             // Tree
-  sizeof(santa_down)/NOTE_SIZE,        // Santa down
-  //sizeof(i_want)/NOTE_SIZE,
-  //sizeof(rockin)/NOTE_SIZE,
+const uint8_t song_lengths[NUM_SONGS] = {
+  sizeof(last_christmas)/NOTE_SIZE,
+  sizeof(wish_merry)/NOTE_SIZE,
+  sizeof(silent)/NOTE_SIZE,
+  sizeof(jingle)/NOTE_SIZE,
+  sizeof(feliz)/NOTE_SIZE,
+  sizeof(i_want)/NOTE_SIZE,
+  sizeof(rockin)/NOTE_SIZE,
 };
 
 typedef struct {
@@ -90,7 +88,7 @@ void _t2pwm_init(void)
     TIM2->PSC = PRESCALE_DIV4;
     // set PWM total cycle width
     TIM2->ATRLR = 1023;
-    TIM2->CH3CVR = 1024;
+    TIM2->CH3CVR = 0;
 
     // for channel 1 and 2, let CCxS stay 00 (output), set OCxM to 110 (PWM I)
     // enabling preload causes the new pulse width in compare capture register only to come into effect when UG bit in SWEVGR is set (= initiate update) (auto-clears)
@@ -101,7 +99,7 @@ void _t2pwm_init(void)
     TIM2->CTLR1 |= TIM_ARPE;
 
     // Enable Channel outputs, set default state (based on TIM2_DEFAULT)
-    TIM2->CCER |= TIM_CC3E | (TIM_CC3P & TIM2_DEFAULT);
+    TIM2->CCER |= TIM_CC3E;
 
     // initialize counter
     TIM2->SWEVGR |= TIM_UG;
@@ -115,12 +113,11 @@ void _tone(uint32_t freq) {
     // ATRLR = clock/(freqz*prescaler)
     if(freq == 0){
         // If timer period (ATRLR) < compare value (CH3CVR), then PWM = 0
-        TIM2->ATRLR = (uint16_t) 1023;
-        TIM2->CH3CVR = (uint16_t) 1024;
+        TIM2->CH3CVR = (uint16_t) 0;
 
         // Initiate timer update
         TIM2->SWEVGR |= TIM_UG;
-        TIM2->CCER &= ~(TIM_CC3E | (TIM_CC3P & TIM2_DEFAULT));
+        TIM2->CCER &= ~(TIM_CC3E);
         return;
     }
 
@@ -132,27 +129,25 @@ void _tone(uint32_t freq) {
 
     // Initiate timer update     
     TIM2->SWEVGR |= TIM_UG;
-    TIM2->CCER |= TIM_CC3E | (TIM_CC3P & TIM2_DEFAULT);
+    TIM2->CCER |= TIM_CC3E;
 }
 
 
 void music_off(music_state_t * state) {
     state->playing = false;
     Delay_Ms(2);
-    TIM2->ATRLR = (uint16_t) 1023;
-    TIM2->CH3CVR = (uint16_t) 1024;
+    TIM2->CH3CVR = (uint16_t) 0;
     TIM2->SWEVGR |= TIM_UG;
-    TIM2->CCER &= ~(TIM_CC3E | (TIM_CC3P & TIM2_DEFAULT));
+    TIM2->CCER &= ~(TIM_CC3E);
     TIM2->CTLR1 &= ~TIM_CEN;
 }
 
 void music_on(music_state_t * state) {
     state->playing = true;
     state->note_index = 0;
-    //ms_cnt = 0;
-    TIM2->CCER |= TIM_CC3E | (TIM_CC3P & TIM2_DEFAULT);
+    
+    TIM2->CCER |= TIM_CC3E;
     TIM2->CTLR1 |= TIM_CEN;
-
 }
 
 void music_init(music_state_t * state){
@@ -168,15 +163,12 @@ void music_init(music_state_t * state){
 }
 
 void music_change_song(music_state_t * state, uint8_t song_idx) {
-    //music_off();
 
     // Check index in range
-    if(song_idx >= (sizeof(songs)/sizeof(songs[0]))){ return; }
+    if(song_idx >= NUM_SONGS){ return; }
     state->curr_song = songs[song_idx];
     state->curr_song_length = song_lengths[song_idx];
     state->note_index = 0;
-    //ms_cnt = 0;
-    //music_on();
 }
 
 // Play next note

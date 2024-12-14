@@ -25,6 +25,9 @@
 // Maximum interval
 #define BASE_INTERVAL 1000 
 
+// I2C slave addr
+#define I2C_ADDR 0x77
+
 volatile int speed_count = 0;
 volatile int8_t speed_idx = 2;
 volatile uint8_t i2c_registers[2] = {0x00};
@@ -36,7 +39,7 @@ volatile uint8_t last_music_note;
 // Step interval = BASE_INTERVAL / speed_values 
 // Ex. 60 -> 1 step per 16 ticks
 // 20 -> 1 step per 50 ticks 
-static const int speed_values[] = {-60, -40, -20, 20, 40, 60};
+static const int speed_values[] = {-50, -35, -20, 20, 35, 50};
 
 track_state_t track_state;
 
@@ -54,7 +57,8 @@ void onWrite(uint8_t reg, uint8_t length) {
 		music_running = false;
 	}else{
 		music_running = true;
-		
+		track_enable(&track_state);
+
 		if(i2c_registers[0] == 0){
 			ui_state.speed = 0;
 		}else{
@@ -93,7 +97,7 @@ int main()
 	systick_init();
 
 	//I2C
-    SetupI2CSlave(0x07, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
+    SetupI2CSlave(I2C_ADDR, i2c_registers, sizeof(i2c_registers), onWrite, NULL, false);
 	//I2C
 
 	PhasePWM_initTim2_IRQ();
