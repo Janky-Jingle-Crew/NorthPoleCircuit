@@ -5,6 +5,7 @@ Also available on [janky-jingle-crew.com/NorthPoleCircuit](https://janky-jingle-
 
 {% endcomment %}
 
+
 Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, USB-C, hyper-festive, magnetic propulsion **christmas card!***
 
 ![](./Media/video_1.gif)
