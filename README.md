@@ -3,9 +3,11 @@ Merry Christmas, and a Happy New Year! This year, we present the first *Dual-cor
 
 *Image/video goes here*
 
-## User guide
+## User Guide
 
-## Technical details
+## Technical Details
+
+### Working Principle
 
 ## Manufacturing
 
