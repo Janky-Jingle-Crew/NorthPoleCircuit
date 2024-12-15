@@ -67,7 +67,7 @@ Special thanks to **Jeff McBride**, this project was heavily inspired by his awe
 
 Also thank you **cnlohr** for the [ch32v003fun](https://github.com/cnlohr/ch32v003fun) framework which was used to program the microcontrollers.
 
-Thanks to Ida Udd for the beautiful design of the reindeer and Rikard Karlsson for helping us 3D print the sleighs. 
+Thanks to **Ida Udd** for the beautiful design of the reindeer and **Rikard Karlsson** for helping us 3D print the sleighs. 
 
 ## Contributors
 The Janky Jingle Crew 2024 consists of: 
