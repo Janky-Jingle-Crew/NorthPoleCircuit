@@ -1,10 +1,13 @@
+# North Pole Circuit
 Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, USB-C, hyper-festive, magnetic propulsion **christmas card!***
 
-*Image/video goes here*
+![](./Media/video_1.gif)
+
 
 ## User Guide
 
-Press the buttons
+Press the bottom buttons to control the track. There are three speed levels for each direction.
+The upper music button plays a small Christmas Jingle accompanied with a small "dance".
 
 ## Technical Details
 
