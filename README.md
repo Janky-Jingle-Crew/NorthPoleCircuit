@@ -1,8 +1,10 @@
-Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, USB-C, hyper-festive, magnetic propulsion **christmas card!*** (AI?)
+Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, USB-C, hyper-festive, magnetic propulsion **christmas card!***
 
 *Image/video goes here*
 
 ## User Guide
+
+Press the buttons
 
 ## Technical Details
 
