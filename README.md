@@ -1,4 +1,3 @@
-# North Pole Circuit
 Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, USB-C, hyper-festive, magnetic propulsion **christmas card!*** (AI?)
 
 *Image/video goes here*
