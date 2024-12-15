@@ -41,6 +41,19 @@ A separate circuit using another CH32V003 handles LED control and buzzer music.
 
 
 ## Manufacturing
+### Trees and cottages
+The trees, cottage and ground are all one solid 3D-print, with a touch of white matte primer spray paint from above. Here, it is printed in 'army brown' PLA @ 0.2 mm layer height. Rectangular holes under the cottages give space for LEDs to illuminate them. This print is mounted to the PCB with 2 * M2.5x4mm screws.
+
+<img src="https://github.com/Janky-Jingle-Crew/NorthPoleCircuit/blob/main/Media/single_decoration.jpg" width="500"/>
+
+### Sleigh and reindeer
+The sleigh and reindeer are also 3D-printed, but are a bit different. Here, the sleigh is one print with multiple filaments, while the deer consists of two different; a white base for the magnets and the reindeer itself in the same brown filament as the trees.
+
+<img src="https://github.com/Janky-Jingle-Crew/NorthPoleCircuit/blob/main/Media/sleigh_1.jpg" width="330"/>     <img src="https://github.com/Janky-Jingle-Crew/NorthPoleCircuit/blob/main/Media/sleigh_2.jpg" width="330"/>     <img src="https://github.com/Janky-Jingle-Crew/NorthPoleCircuit/blob/main/Media/deer_1.jpg" width="330"/>
+
+Mounting the magnets is quite tricky, and it is crucial to orient them correctly! The ability to press fit is highly dependent on the 3D-printer used. In this case for the sleigh, a small drop of super glue is applied on the magnets before pressed into the sleigh using a specialized fixture. The base for the reindeer is flat, which enables the magnets to be pressed in before the reindeer itself is mounted.
+
+
 
 ## Credits
 
