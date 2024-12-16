@@ -60,6 +60,8 @@ The sleigh and reindeer are also 3D-printed, but are a bit different. Here, the 
 
 Mounting the magnets is quite tricky, and it is crucial to orient them correctly! The ability to press fit is highly dependent on the 3D-printer used. In this case for the sleigh, a small drop of super glue is applied on the magnets before pressed into the sleigh using a specialized fixture. The base for the reindeer is flat, which enables the magnets to be pressed in before the reindeer itself is mounted.
 
+<img src="./Media/production_glueing.jpg" width="500"/>
+
 
 
 ## Credits
