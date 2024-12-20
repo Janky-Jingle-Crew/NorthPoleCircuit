@@ -7,11 +7,12 @@ Also available on [janky-jingle-crew.com/NorthPoleCircuit](https://janky-jingle-
 
 
 Merry Christmas, and a Happy New Year! This year, we present the first *Dual-core, 32-bit, high-speed, RISC-V, USB-C, hyper-festive, magnetic propulsion **christmas card!***
+
 {% comment %}
 ![](./Media/video_1.gif)
 {% endcomment %}
 
-<iframe width="600" height="400" src="https://www.youtube.com/embed/rN7HYXmgxzk" title="North Pole Circuit - 2024 Christmas Card" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="640" height="380" style="max-width:100%;max-height:100%;" src="https://www.youtube.com/embed/rN7HYXmgxzk" title="North Pole Circuit - 2024 Christmas Card" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## User Guide
 
