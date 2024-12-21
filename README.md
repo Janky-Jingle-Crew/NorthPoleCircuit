@@ -14,6 +14,8 @@ Merry Christmas, and a Happy New Year! This year, we present the first *Dual-cor
 
 <iframe width="640" height="380" style="max-width:100%;max-height:100%;" src="https://www.youtube.com/embed/rN7HYXmgxzk" title="North Pole Circuit - 2024 Christmas Card" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
+Also featured in [Hackaday](https://hackaday.com/?p=739494)
+
 ## User Guide
 
 Plug in a USB-C cable, place the card on a flat surface, and put the deer and the sleigh onto the track. The three buttons at the bottom control the speed, there are three levels for each direction. The upper music button plays a Christmas Jingle accompanied by a small "dance".
