@@ -17,11 +17,12 @@ Also featured in [Hackaday](https://hackaday.com/?p=739494)
 Plug in a USB-C cable, place the card on a flat surface, and put the deer and the sleigh onto the track. The three buttons at the bottom control the speed, there are three levels for each direction. The upper music button plays a Christmas Jingle accompanied by a small "dance".
 
 ## Working Principle
-The propulsion is driven by the [Lorentz force law](https://en.wikipedia.org/wiki/Lorentz_force), which acts orthogonally to the directions of both the current flow and the magnetic field. By using magnets with poles aligned vertically (top and bottom) and positioning the PCB traces perpendicular to the track’s direction, the magnets experience a forward or backward force along the track based on the current direction.
+The propulsion can by explained by the reaction force from the [Lorentz force law](https://en.wikipedia.org/wiki/Lorentz_force) or [Magnetic forces](https://en.wikipedia.org/wiki/Force_between_magnets#Magnetic_force_due_to_non-uniform_magnetic_field), which acts orthogonally to the directions of both the current flow and the magnetic field. Both seem to give the correct force vector, maybe someone smarter can figure out which one it actually is. By using magnets with poles aligned vertically (top and bottom) and positioning the PCB traces perpendicular to the track’s direction, the magnets experience a forward or backward force along the track based on the current direction.
 
 <img src="./Media/PCB_track.png" width=500px>
 
 The tracks (A and B) are driven with two sinusoidal waveforms with a 90-degree phase shift between them, similar to microstepping a bipolar stepper motor. A guard rail is also added to keep the magnets centered during curves. The guard rails run along the outside of the track (parallel with track direction) which means an inwards force is generated instead.
+<img src="./Media/A_B_diagram.png" width=800px>
 
 For more detailed explanations of the working priciples, refer to **Jeff McBride’s** [blog post](https://jeffmcbride.net/gauss-speedway/).
 
