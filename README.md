@@ -10,7 +10,7 @@ Merry Christmas, and a Happy New Year! This year, we present the first *Dual-cor
 
 [![North Pole Circuit](https://img.youtube.com/vi/rN7HYXmgxzk/0.jpg)](https://www.youtube.com/watch?v=rN7HYXmgxzk)
 
-Also featured in [Hackaday](https://hackaday.com/?p=739494)
+Featured on [Hackaday.com](https://hackaday.com/?p=739494), [hackster.io](https://www.hackster.io/news/racing-toward-christmas-4728aa6665af)
 
 ## User Guide
 
