@@ -65,10 +65,47 @@ The sleigh and reindeer are also 3D-printed, but are a bit different. The sleigh
 
 <img src="./Media/sleigh_1.jpg" width="330px"/>     <img src="./Media/sleigh_2.jpg" width="330px"/>     <img src="./Media/deer_1.jpg" width="330px"/>
 
-Mounting the magnets was quite tricky, and it is crucial to orient them correctly! We fine-tuned the models so that the magnets would press-fit into place. For the sleigh, a small drop of super glue was applied to the magnets before being pressed into the sleigh using a specialized fixture. The reindeer is simpler since the base is flat, the magnets were pressed in before the reindeer itself was mounted on top.
+Mounting the magnets (2x1 mm, N42/N52) was quite tricky, and it is crucial to orient them correctly! We fine-tuned the models so that the magnets would press-fit into place. For the sleigh, a small drop of super glue was applied to the magnets before being pressed into the sleigh using a specialized fixture. The reindeer is simpler since the base is flat, the magnets were pressed in before the reindeer itself was mounted on top.
 
 <img src="./Media/production_glueing_blur.jpg" width="500"/>
 
+## FAQ
+### How do I reproduce this?
+#### PCB
+The production files for the PCB are provided in PCB/production/. 
+Upload the gerber, BOM and position files to JLCPCB to order the boards. 
+Some important special options:
+* LeadFree HASL (No lead poisoning for friends and family)
+* 1 oz Inner Copper weight (Needed to reduce phase resistance)
+* Layer Sequence (JLCPCB usually gets it right from the gerber names but it's safer to specify them)
+    * L1 F_Cu
+    * L2 In1_Cu
+    * L3 In2_Cu
+    * L3 B_Cu
+* Impedance control (Minimize distance/prepreg between L1 and L2 = Stronger field strength)
+    * Choose one of these:
+        * JLC041611-7628 (0.2104mm prepreg, allows for cheaper economic assembly, used in ours)
+        * JLC041611-3313 (0.092mm prepreg, standard assembly required)
+        * JLC041611-1080 (0.069mm prepreg, standard assembly + extra fee required)
+#### Flashing
+A WCH-LinkE or similar programmer is required, see [ch32v003fun](https://github.com/cnlohr/ch32v003fun?tab=readme-ov-file#ch32v003fun).
+Some type of 6 pin (2x3 1.27mm pitch) pogo connector is required (we use a TagConnect TC2030NL).
+Or you can solder wires directly to the pads. Only SWDIO and GND need to be connected (power from USB instead to ensure programmer does not source too much current). 
+
+### How much did this all cost?
+For 50 boards, the cost breakdown **(VAT & shipping excluded)** looks like this:
+* PCBs $140
+* Components $127
+* Assembly Fee $46
+* Filament & Spray paint $40
+* Magnets $35
+* Screws $10
+
+Total cost was \$398 which rounds out to roughly 8$ per card. 
+**Do note that JLCPCB can be quite costly for smaller batches (~$90 for 5 populated boards).** 
+
+### More technical tidbits
+See the discussion in [#1](https://github.com/Janky-Jingle-Crew/NorthPoleCircuit/issues/1) with **cnlohr**. 
 
 ## Credits
 
