@@ -101,7 +101,7 @@ For 50 boards, the cost breakdown **(VAT & shipping excluded)** looks like this:
 * Magnets $35
 * Screws $10
 
-Total cost was \$398 which rounds out to roughly 8$ per card. 
+Total cost was 398 USD which rounds out to roughly 8 USD per card. 
 **Do note that JLCPCB can be quite costly for smaller batches (~$90 for 5 populated boards).** 
 
 ### More technical tidbits
