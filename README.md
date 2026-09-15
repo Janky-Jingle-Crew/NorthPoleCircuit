@@ -118,7 +118,7 @@ Thanks to **Ida Udd** for the beautiful design of the reindeer and **Rikard Karl
 ## Contributors
 The Janky Jingle Crew 2024 consists of: 
 
- - [Daniel Quach](https://github.com/Muoshy): Project lead, PCB, Code, Assembly, Documentation
+ - [Daniel Quach](https://github.com/BasementCircuits): Project lead, PCB, Code, Assembly, Documentation
  - [Johan Wheeler](https://github.com/johanwheeler): PCB Track, sleigh design, Assembly
  - [Gustav Abrahamsson](https://github.com/GustavAbrahamsson): Decorations, sleigh design, Assembly
  - [Adam Anderson](https://github.com/adaand00): Code, sleigh design, Assembly, Documentation
